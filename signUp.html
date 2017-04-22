@@ -1,0 +1,66 @@
+<HTML>
+<HEAD>
+    <TITLE>Register</TITLE>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
+    <SCRIPT LANGUAGE="JavaScript">
+
+        //  var Parse = require('parse').Parse;
+        Parse.initialize("NiGrwKKAmn43RbTKvoXVP5wWCpCDFBzRxn7MyUKl", "rTiBXsdbIO2lV7wG6IrCH6ngJMfLEBPxW4Mk47Fw");
+        function testResults(form){
+            //     alert("HERE1");
+
+            var username = form.inputbox.value;
+            var password = form.inputbox2.value;
+	   var userType = form.inputbox3.value;
+            // alert ("username " + username);
+            //alert ("Password: " + password);
+
+            var user = new Parse.User();
+            //   alert("HERE2");
+            user.set("username", username);
+            user.set("password", password);
+	    user.set("userType", userType);
+            //  alert("USERNAME2: " + username);
+            user.signUp(null, {
+                success: function(user) {
+                    alert("user created");
+                    document.location.href ="login.html" ;
+
+                },
+                error: function(user, error) {
+                    // Show the error message somewhere and let the user try again.
+                    alert("Error: " + error.code + " " + error.message);
+                }
+            });
+
+        }
+    </SCRIPT>
+    
+     <script src='http://codepen.io/assets/libs/fullpage/jquery_and_jqueryui.js'></script>
+       <!--  <link rel='stylesheet' href='http://codepen.io/assets/libs/fullpage/jquery-ui.css'> -->
+		 <link rel="stylesheet" href="css/style.css" media="screen" type="text/css" />
+</HEAD>
+<BODY>
+
+<div align=”center” margin-bottom="50%"><img src="images/banner.png" alt="banner_stonybrook" width="100%" height="100px" border="0" align="middle"></div>
+
+<hr>
+
+<br><br><br><br>
+<div class="login-card">
+    <h1>Register</h1><br>
+  <form>
+    <input type="text" name="user" placeholder="Username">
+    <input type="password" name="pass" placeholder="Password">
+    <input type="password" name="pass2" placeholder="Confirm Password">
+    <input type="password" name="pass2" placeholder="Role">
+    
+    <input type="submit" name="login" class="login login-submit" value="login">
+  </form>
+
+</div>
+
+</BODY>
+</HTML>
+

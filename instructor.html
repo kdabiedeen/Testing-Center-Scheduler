@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Instructor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="bootstrap_override.css">
+
+    <!--Date Picker Stuff-->
+    <link rel= "stylesheet" href = "bootstrap-datetimepicker.css">
+    <script type="text/javascript" src="jquery-2.1.1.min.js"></script>
+    <script src="moment-with-locales.js"></script>
+    <script src="bootstrap-datetimepicker.js"></script>
+    <!--Date Picker Stuff-->
+
+    <script language="JavaScript">
+        Parse.initialize("T37yx8jot7RnoFgBgzlvQlW8BHTV5hapHtzy4yNx", "BlVBlmfjcQKTlpJP7f1QHLjENaQ9RIPNP0kM99nF");
+
+        String.prototype.isEmpty = function() {
+            return (this.length === 0 || !this.trim());
+        };
+
+        function onLoad() {
+
+            var path = window.location.pathname;
+            var user = Parse.User.current();
+
+            fillRequestTable();
+        }
+
+        function deleteExam(form) {
+
+            var booleanValue = false;
+            var identifier = form.examIdentifierDelete.value;
+            var Exam = Parse.Object.extend("Exam");
+
+            var exam = new Exam();
+            var query = new Parse.Query(exam);
+            query.equalTo("ExamIdentifier", identifier);
+            query.first({
+                success: function (results) {
+                    var status = results.get('CurrentStatus');
+                    if(status == 'pending'){
+                        results.destroy({});
+                        fillRequestTable();
+                        alert("Exam deleted");
+                    }
+                    else
+                        alert("Exam cannot be deleted");
+
+                },
+                error: function (exam, error) {
+                    console.log("Error: " + error.code + " " + error.message);
+                }
+            });
+        }
+
+
+
+        function submitExamRequest(form){
+            var courseID = form.courseID.value;
+            var sectionNumber = form.sectionNumber.value;
+            var term = form.term.value;
+            var duration = form.duration.value;
+            var examNumber = form.examNumber.value;
+
+            var startTime = form.startTime.value;
+            var endTime = form.endTime.value;
+
+            var startDate = form.startDate.value;
+            var endDate = form.endDate.value;
+
+            var adhoc = document.getElementById('adhocVal').checked;
+            var regular = document.getElementById('regularVal').checked;
+
+            function adhocStudentObject(netID, lastName, firstName){
+                this.firstName = firstName;
+                this.lastName = lastName;
+                this.netID = netID;
+            }
+
+            var a;
+
+            if(adhoc == true){
+                var adhocStudentsList = form.adhocstudents.value;
+                var values = adhocStudentsList.split("\n");
+
+                var adhocExamName = form.adhocExamName.value;
+
+                var adhocStudentsArray = [];
+
+                for(i = 0; i < values.length; i++){
+                    if(!(values[i].isEmpty())){
+                        var lineValues = values[i].split(" ");
+                        var adhocStudentToAdd = new adhocStudentObject(lineValues[0].trim(), lineValues[1].trim(), lineValues[2].trim());
+                        adhocStudentsArray.push(adhocStudentToAdd);
+                    }
+                }
+
+
+                var jsonStart = '{"students":[';
+
+                for(i = 0; i < adhocStudentsArray.length; i++){
+                    var jsonBuilder = '{"netID":"REPLACENETID", "lastName": "REPLACELASTNAME", "firstName":"REPLACEFIRSTNAME"}';
+                    var jsonBuilder = jsonBuilder.replace("REPLACENETID", adhocStudentsArray[i].netID);
+                    var jsonBuilder = jsonBuilder.replace("REPLACELASTNAME", adhocStudentsArray[i].lastName);
+                    var jsonBuilder = jsonBuilder.replace("REPLACEFIRSTNAME", adhocStudentsArray[i].firstName);
+                    if(i != adhocStudentsArray.length - 1){
+                        jsonBuilder = jsonBuilder.concat(',');
+                    }
+                    jsonStart += jsonBuilder.trim();
+                }
+
+                var jsonEnd = ']}';
+                jsonStart += jsonEnd;
+
+                console.log(jsonStart);
+
+                a = JSON.parse(jsonStart);
+
+                var Exam = Parse.Object.extend("Exam");
+                var exam = new Exam();
+
+                var user = Parse.User.current();
+                var professorNetID = user.get("username");
+                var pending = 'pending';
+                var adhocIdentifier = 'adhoc_' + adhocExamName + '_' + examNumber;
+
+                exam.set('ExamIdentifier', adhocIdentifier)
+                exam.set("Adhoc", true);
+                exam.set("ExamNumber", examNumber);
+                exam.set("CourseID", courseID )
+                exam.set("Duration", duration);
+                exam.set("AdhocStudents", a);
+                exam.set("StartDate", startDate);
+                exam.set("StartTime", startTime);
+                exam.set("EndDate", endDate);
+                exam.set("EndTime", endTime);
+                exam.set("AdminApproval", false);
+                exam.set("ProfUserID", professorNetID);
+                exam.set("CurrentStatus", pending);
+                exam.set("Admin", true);
+
+                exam.save(null, {
+                    success: function (exam) {
+                        alert("Adhoc Exam Request Submitted");
+                                            },
+                    error: function (exam, error) {
+                        alert(error.message);
+                    }
+                });
+
+                fillRequestTable();
+
+                
+            }
+
+            if(regular == true){
+                var Exam = Parse.Object.extend("Exam");
+                var exam = new Exam();
+
+                var exam_identifier = courseID  + '-' + sectionNumber + '_' + term + '_ex' + examNumber;
+
+
+                var Course = Parse.Object.extend("Courses");
+                var course = new Course();
+                var courseQuery = new Parse.Query(course);
+                courseQuery.equalTo("CourseIdentifier", courseID + '-' + sectionNumber);
+                courseQuery.equalTo("Term", term);
+                courseQuery.first().then(function(object) {
+                    if (object != null) {
+                        var classid = object.get('ClassID');
+                        var user = Parse.User.current();
+                        var professorNetID = user.get("username");
+                        var pending = 'pending';
+
+                        exam.set("CourseID", courseID);
+                        exam.set("CourseIdentifier", courseID + '-' + sectionNumber);
+                        exam.set("SectionNum", sectionNumber);
+                        exam.set("Duration", duration);
+                        exam.set("Term", term);
+                        exam.set('Adhoc', false);
+                        exam.set("ExamNumber", examNumber);
+                        exam.set("StartDate", startDate);
+                        exam.set("StartTime", startTime);
+                        exam.set("EndDate", endDate);
+                        exam.set("EndTime", endTime);
+                        exam.set("ExamIdentifier", exam_identifier);
+                        exam.set("AdminApproval", false);
+                        exam.set("ProfUserID", professorNetID);
+                        exam.set("CurrentStatus", pending);
+                        exam.set("ClassID", classid);
+                        exam.set("Admin", true)
+
+                        exam.save(null, {
+                            success: function (exam) {
+                                fillRequestTable();
+                                alert("Regular Exam Request submitted");
+                            },
+                            error: function (exam, error) {
+                                console.log(error.message)
+                            }
+                        });
+
+                    } else {
+                        alert("No Such Course Exists!");
+                    }
+                });
+                
+            }
+
+        }
+
+        function clearTable(){
+            var tableBody = document.getElementById("coursesTable");
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+        }
+        
+        function changeX(y){
+            console.log("changing value");
+            numOfStudentsToTakeExam = y;
+            console.log("changed value " + numOfStudentsToTakeExam);
+        }
+
+
+        function fillRequestTable(){
+
+            clearTable();
+
+            var user = Parse.User.current();
+            var professorNetID = user.get("username");
+            console.log(professorNetID);
+
+            var Exam = Parse.Object.extend("Exam");
+            var exam = new Exam();
+            var query = new Parse.Query(exam);
+            query.equalTo("ProfUserID", professorNetID);
+
+
+            //start anand's version with promises
+            var allInfo = [];
+            query.find().then(function(results){
+
+                for(var i = 0; i < results.length; i++) {
+                    var obj = results[i];
+                    var adhocExamBool = obj.get("Adhoc");
+                    console.log('Adhoc ' + adhocExamBool);
+
+                    if(adhocExamBool == false) {
+                        var classid = obj.get("ClassID");
+                        var info = {
+                            examIdentifier: obj.get("ExamIdentifier"),
+                            startDate: obj.get("StartDate"),
+                            startTime: obj.get("StartTime"),
+                            endDate: obj.get("EndDate"),
+                            endTime: obj.get("EndTime"),
+                            currentStatus: obj.get("CurrentStatus"),
+                            classid: classid
+                        };
+
+                        allInfo.push(info);
+                        var Roster = Parse.Object.extend("Roster");
+                        var rosters = new Roster();
+                        var studentsInClass = new Parse.Query(rosters);
+                        studentsInClass.equalTo("classID", classid);
+                        studentsInClass.find({
+                            success: function (foundStudents) {
+                                if (foundStudents.length > 0) {
+                                    console.log("hello");
+                                    console.log(foundStudents.length);
+
+                                    numOfStudentsToTakeExam = foundStudents.length;
+                                    var index = -1;
+                                    if (foundStudents[0] != null) {
+                                        var cID = foundStudents[0].get("classID");
+                                        console.log("cID: " + cID);
+                                        for (var i = 0; i < allInfo.length; i++) {
+                                            if (allInfo[i]["classid"] == cID) {
+                                                index = i;
+                                            }
+                                        }
+                                    }
+                                    console.log("index: " + index);
+
+                                    if (index != -1) {
+                                        tablebody = document.getElementById("coursesTable");
+                                        row = document.createElement("tr");
+                                        cell1 = document.createElement("td");
+                                        cell2 = document.createElement("td");
+                                        cell3 = document.createElement("td");
+                                        cell4 = document.createElement("td");
+                                        cell5 = document.createElement("td");
+                                        cell6 = document.createElement("td");
+                                        cell7 = document.createElement("td");
+//                                  // cell8 = document.createElement("td");
+                                        textnode1 = document.createTextNode(allInfo[index]["examIdentifier"]);
+                                        textnode2 = document.createTextNode(allInfo[index]["startDate"]);
+                                        textnode3 = document.createTextNode(allInfo[index]["startTime"]);
+                                        textnode4 = document.createTextNode(allInfo[index]["endDate"]);
+                                        textnode5 = document.createTextNode(allInfo[index]["endTime"]);
+                                        textnode6 = document.createTextNode(allInfo[index]["currentStatus"]);
+                                        textnode7 = document.createTextNode(numOfStudentsToTakeExam);
+                                        //  textnode8 = document.createTextNode(object.get('ExamNumber'));
+
+                                        cell1.appendChild(textnode1);
+                                        cell2.appendChild(textnode2);
+                                        cell3.appendChild(textnode3);
+                                        cell4.appendChild(textnode4);
+                                        cell5.appendChild(textnode5);
+                                        cell6.appendChild(textnode6);
+                                        cell7.appendChild(textnode7);
+                                        //   cell8.appendChild(textnode8);
+
+                                        row.appendChild(cell1);
+                                        row.appendChild(cell2);
+                                        row.appendChild(cell3);
+                                        row.appendChild(cell4);
+                                        row.appendChild(cell5);
+                                        row.appendChild(cell6);
+                                        row.appendChild(cell7);
+                                        //    row.appendChild(cell8);
+
+                                        tablebody.appendChild(row);
+
+
+                                    }
+                                } else {
+
+                                }
+
+
+                            }
+                        });
+                    }
+
+                    if(adhocExamBool == true){
+                        var adhocStudentsObj = obj.get("AdhocStudents");
+                        console.log(adhocStudentsObj);
+
+                        var count = 0;
+
+                        for(var property in adhocStudentsObj["students"]){
+                            if(adhocStudentsObj["students"].hasOwnProperty(property)){
+                                count++;
+                            }
+                        }
+
+
+
+                                        tablebody = document.getElementById("coursesTable");
+                                        row = document.createElement("tr");
+                                        cell1 = document.createElement("td");
+                                        cell2 = document.createElement("td");
+                                        cell3 = document.createElement("td");
+                                        cell4 = document.createElement("td");
+                                        cell5 = document.createElement("td");
+                                        cell6 = document.createElement("td");
+                                        cell7 = document.createElement("td");
+//                                  // cell8 = document.createElement("td");
+                                        textnode1 = document.createTextNode(obj.get("ExamIdentifier"));
+                                        textnode2 = document.createTextNode(obj.get("startDate"));
+                                        textnode3 = document.createTextNode(obj.get("StartTime"));
+                                        textnode4 = document.createTextNode(obj.get("EndDate"));
+                                        textnode5 = document.createTextNode(obj.get("EndTime"));
+                                        textnode6 = document.createTextNode(obj.get("CurrentStatus"));
+                                        textnode7 = document.createTextNode(count);
+                                        //  textnode8 = document.createTextNode(object.get('ExamNumber'));
+
+                                        cell1.appendChild(textnode1);
+                                        cell2.appendChild(textnode2);
+                                        cell3.appendChild(textnode3);
+                                        cell4.appendChild(textnode4);
+                                        cell5.appendChild(textnode5);
+                                        cell6.appendChild(textnode6);
+                                        cell7.appendChild(textnode7);
+                                        //   cell8.appendChild(textnode8);
+
+                                        row.appendChild(cell1);
+                                        row.appendChild(cell2);
+                                        row.appendChild(cell3);
+                                        row.appendChild(cell4);
+                                        row.appendChild(cell5);
+                                        row.appendChild(cell6);
+                                        row.appendChild(cell7);
+                                        //    row.appendChild(cell8);
+
+                                        tablebody.appendChild(row);
+
+                        
+
+                    }
+                }
+
+            });
+            //end anand's version with promises
+
+        }
+
+
+        //Adding Utilization js code
+        //Added stuff for utilization starting here
+
+        $(function () {
+
+            $('#datetimepicker1').datetimepicker({
+                daysOfWeekDisabled: [0, 6],
+                format: 'MM/DD/YYYY'
+            });
+            $('#datetimepicker2').datetimepicker({
+                useCurrent: false,
+                daysOfWeekDisabled: [0, 6],
+                format: 'MM/DD/YYYY'
+            });
+            $("#datetimepicker1").on("dp.change", function (e) {
+                $('#datetimepicker2').data("DateTimePicker").minDate(e.date);
+            });
+            $("#datetimepicker2").on("dp.change", function (e) {
+                $('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
+            });
+
+        });
+
+        function convertUtil(inputval){
+            dateArr = inputval.split('-');
+            var newDate = dateArr[1] + '/' + dateArr[2] + '/' + dateArr[0];
+
+            return newDate;
+        }
+
+        function displayUtilization(){
+            var utilFrom = document.getElementById("utilGet1").value;
+            var utilTo = document.getElementById("utilGet2").value;
+
+            var fromValue = convertUtil(utilFrom);
+            var toValue = convertUtil(utilTo);
+
+            console.log(utilFrom);
+            console.log(utilTo);
+            console.log(fromValue);
+            console.log(toValue);
+
+            checkUtilOld(utilFrom,utilTo);
+
+        }
+
+        /**
+         * Displays the Utilization for the dates in a range
+         * @param fromDate in mm/dd/yyyy format string of starting date in range
+         * @param toDate in mm/dd/yyyy format string of ending date in range
+         */
+        function checkUtilOld( fromDate, toDate) {
+
+            var from = changeToIntOld(fromDate);
+            var to = changeToIntOld(toDate);
+
+            var dayArray = getDayDifferenceArrayOld(fromDate, toDate);
+            // var exams;
+
+            var Exams = Parse.Object.extend("Exam");
+            var query1 = new Parse.Query(Exams);
+            query1.find().then(function(exams) {
+                // exams = exams1;
+
+                var Exam = Parse.Object.extend("TimeSlot");
+                var query = new Parse.Query(Exam);
+                query.find({
+                    success: function(results) {
+                        // Do something with the returned Parse.Object values
+                        for (var i = 0; i < results.length; i++) {
+                            var object = results[i];
+
+                            // var date = changeToInt(object.get('Date'));
+
+                            var resultsArray = results;
+
+
+
+                        }
+                        calculateAndPopulate(dayArray,resultsArray, exams);
+                    },
+                    error: function(error) {
+                        alert("Error: " + error.code + " " + error.message);
+                    }
+                });
+            });
+
+        }
+
+        /**
+         * Calculates the Utilization percent and populates the table in htm
+         * @param dayArray the array that holds the day and its information
+         * @param resultsArray pulled from Parse, the whole TimeSlots Table
+         * @param exams
+         */
+        function calculateAndPopulate (dayArray, resultsArray, exams) {
+
+
+            // get current date
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1;
+            var yyyy = today.getFullYear();
+            if(dd<10){
+                dd='0'+dd
+            }
+            if(mm<10){
+                mm='0'+mm
+            }
+            var today = mm+'/'+dd+'/'+yyyy;
+            var dateNow = changeToIntOld(today);
+//        var exams = getExamInfo();
+
+            for (var j = 0; j < resultsArray.length; j++){
+                //var duration = 0;
+                var rdate = changeToIntOld(resultsArray[j].get('Date'));
+                for (var k = 0; k < dayArray.length; k++) {
+                    var a = dayArray[k];
+//alert(a[0]);
+                    var date = changeToIntOld(a[0]);
+
+                    //  alert(rdate + "..." + date);
+                    if (date == rdate && date < dateNow) {
+                        var d = getDurationOld(resultsArray[j].get('StartTime'), resultsArray[j].get('EndTime'));
+                        dayArray[k][2] += d;
+
+                        var util = dayArray[k][2]/(64*(14*3600));
+
+                        dayArray[k][1] = (Math.round((util*100) * 1000) / 1000);
+
+                    } else if (date == rdate && date >= dateNow) {
+//                    alert("in here");
+                        var d = getDurationOld(resultsArray[j].get('StartTime'), resultsArray[j].get('EndTime'));
+                        dayArray[k][2] += d;
+
+                        var util = dayArray[k][2]/(64*(14*3600));
+
+                        dayArray[k][1] = 100 - (Math.round((util*100) * 1000) / 1000);
+
+
+
+                    }
+
+                }
+            }
+
+
+
+            tableBody = document.getElementById("utilizationRangeTableBody");
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+            for (var i = 0; i < dayArray.length ; i++) {
+
+
+                row = document.createElement("tr");
+                cell1 = document.createElement("td");
+                cell2 = document.createElement("td");
+                cell3 = document.createElement("td");
+
+                var a = dayArray[i];
+                var dat = changeToIntOld(a[0]);
+
+                textnode1 = document.createTextNode(a[0]);
+
+                if (isNaN(a[1])) {
+                    textnode2 = document.createTextNode("0%");
+                } else {
+
+                    textnode2 = document.createTextNode(a[1] + "%");
+                }
+
+//            alert(dateNow);
+//            alert(dat);
+                if ( dat >= dateNow) {
+                    textnode3 = document.createTextNode("YES");
+
+                } else {
+                    textnode3 = document.createTextNode("NO");
+                }
+
+                console.log(a[0],a[1],a[2]);
+                console.log(textnode1, textnode2, textnode3);
+
+                cell1.appendChild(textnode1);
+                cell2.appendChild(textnode2);
+                cell3.appendChild(textnode3);
+
+                row.appendChild(cell1);
+                row.appendChild(cell2);
+//              row.appendChild(cell3);
+
+
+                tableBody.appendChild(row);
+            }
+        }
+        /**
+         * Get the duration between two specified times
+         * @params start the starting time as string
+         * @params end the ending time as string
+         * @returns int the difference between the start and end in seconds
+         */
+        function getDurationOld(start, end ){
+
+            var sm = 0;
+            var sh = 0;
+            var em = 0;
+            var eh = 0;
+
+            if (start.substring(6,start.length) == "PM") {
+                sm = parseInt(start.substring(3,5));
+                sh = parseInt(start.substring(0,2)) + 12;
+
+
+            } else{
+                sm = parseInt(start.substring(3,5));
+                sh = parseInt(start.substring(0,2));
+            }
+
+            if (end.substring(6, end.length) == "PM") {
+                em = parseInt(end.substring(3,5));
+                eh = parseInt(end.substring(0,2)) + 12;
+                //alert(eh);
+
+            } else{
+                em = parseInt(end.substring(3,5));
+                eh = parseInt(end.substring(0,2));
+            }
+
+
+
+            var startSec = (sh * 3600) + (sm*60);
+            var endSec = (eh * 3600) + (em*60);
+
+            var difference = Math.abs(endSec-startSec);
+            return difference ;
+
+        }
+
+        /**
+         * Get the difference in days and creates an array of all dates within the range
+         * @param from the starting date in the range inclusive
+         * @param to the ending date in the range inclusive
+         * @returns an array of arrays containing incremented dates
+         */
+        function getDayDifferenceArrayOld (from, to) {
+//        alert(from + " " + to);
+            var date1 = new Date(from);
+            var date2 = new Date(to);
+            var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+            var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            var array = new Array();
+            var date = from;
+
+            for (var i = 0; i < diffDays; i++) {
+                var newarray = new Array();
+                newarray.push(date);
+                newarray[2] = 0;
+                array.push(newarray);
+                date = incrementDateOld(date);
+
+            }
+
+            var newarray = new Array();
+            newarray.push(date);
+            newarray[2] = 0;
+            array.push(newarray);
+            return array;
+
+        }
+
+
+        function getDayDifferenceOld (from, to) {
+            var date1 = new Date(from);
+            var date2 = new Date(to);
+            var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+            var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            return diffDays;
+        }
+        /**
+         * Increments date
+         * @param from is the date that needs to be incremented as string
+         * @returns string in the for of the incremented date
+         */
+        function incrementDateOld(from) {
+            var dd = parseInt(from.substring(3,5));
+            var mm = parseInt(from.substring(0,2));
+            var yyyy = parseInt(from.substring(6, from.length));
+
+            if (mm == 01 ||mm == 03 || mm == 05 ||mm == 07 ||mm == 08 ||mm == 10 ||mm == 12 ){
+                if (dd == 31 && mm != 12) {
+                    return ((mm+1) + '/01/'+ from.substring(6,from.length));
+                } else if (dd == 31 && mm == 12){
+                    return ("01/01/" + (yyyy + 1));
+                } else {
+                    return (mm +"/"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) +"/" + from.substring(6, from.length));
+                }
+
+            } else if (mm == 02) {
+                if (dd == 28 || dd == 29) {
+                    return ("03/01/" + from.substring(6, from.length));
+                } else {
+                    return (mm +"/"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) + "/" + from.substring(6, from.length));
+                }
+            } else {
+                if (dd == 30 ){
+                    return ((mm+1) + '/01'+ from.substring(6,from.length));
+                }else {
+                    return (mm +"/"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) + "/" + from.substring(6, from.length));
+                }
+
+
+            }
+
+
+        }
+        /**
+         * Changes the time as a string to an int as specified
+         * @param s date in the form of mm/dd/yyyy
+         * @returns int in the form of yyyymmdd
+         */
+        function  changeToIntOld(s) {
+//        alert(s);
+            var b = s.substring(6, s.length) + '/' + s.substring(0,5);
+//        alert(b);
+            s = b.replace(/\//g,'');
+            var a = parseInt(s);
+            return a;
+        }
+
+
+
+        //End adding old Utilization code
+
+
+        //end adding utilization js code
+
+
+
+            //Exam Schedualability
+    /**
+     * HELPER FUNCTION *Does not need to be implemented, it extracts the html values and passes them into function*
+     */
+    function checkExamSchedulability () {
+
+        var startDate = document.getElementById("startDate").value;
+        var startTime = document.getElementById("startTime").value;
+        var endDate = document.getElementById("endDate").value;
+        var endTime = document.getElementById("endTime").value;
+        var duration = document.getElementById("duration").value;
+        var numStudents = document.getElementById("numStudents").value;
+
+        var available = isExamSchedualable(startDate,startTime,endDate,endTime, duration, numStudents, function(response) {
+            alert(response);
+        });
+    }
+
+
+    /**
+     * Checks if exam range is available for all students in the requested exam times
+     * @param startDate from date picker as seen in above html
+     * @param startTime from time picker as in above html
+     * @param endDate from date picker as seen in above html
+     * @param endTime from time picker as in above html
+     * @param duration provided by user as text input
+     * @papam numStudents provided by user as text input
+     * @callback Callback must be implemented because function is asynchronous
+     * example of how to call with call back is seen in "checkExamSchedulability()"
+     */
+    function isExamSchedualable(startDate, startTime, endDate, endTime, duration, numStudents, callback) {
+        event.preventDefault();
+        var minutes = calculateAvailableTime(startDate, startTime, endDate, endTime)*64;
+
+//        alert("minutes in range: " + minutes);
+        var minutesRequired = duration * numStudents;
+
+//        alert("minutes required: " + minutesRequired);
+
+        var start = startDate + " " + startTime;
+        var end = endDate + " " + endTime;
+        var date1 = new Date(start);
+        var date2 = new Date(end);
+
+        var timeFilled = 0;
+
+        var Exam = Parse.Object.extend("TimeSlot");
+
+        var query = new Parse.Query(Exam);
+
+        query.find().then(function(exams) {
+
+
+            for(var i = 0; i < exams.length; i++) {
+                var object = exams[i];
+
+                var sT = object.get('StartTime');
+                var eT = object.get('EndTime');
+                var date = new Date(object.get('Date') + " " + sT);
+                if (date.getTime() >= date1.getTime()  && date.getTime() < date2.getTime()) {
+                    var dur = (getDuration(sT,eT)/60);
+                    timeFilled += dur;
+
+                } else {
+                }
+
+            }
+
+            var availableMinutes = minutes - timeFilled;
+//            alert("timeFilled: " + timeFilled);
+            if (availableMinutes >= minutesRequired) {
+                callback(true);
+            } else {
+                callback(false);
+            }
+
+        });
+
+
+
+    }
+
+
+
+    /**
+     * calculates the amount of time that should be between the given range based on input and testing center hours
+     * @param startDate
+     * @param startTime
+     * @param endDate
+     * @param endTime
+     * @return time in minutes
+     */
+    function calculateAvailableTime(startDate, startTime, endDate, endTime) {
+        var start = startDate + " " + startTime;
+        var end = endDate + " " + endTime;
+        var date1 = new Date(start);
+        var date2 = new Date(end);
+        var minutes = 0;
+
+
+
+
+        var curdate = new Date(startDate + " 00:00");
+
+        while (curdate.getTime() <= date2.getTime()) {
+
+
+            if (curdate.getDay() != 0 && curdate.getDay() != 6) {
+
+                if((curdate.getDate()==date1.getDate()) && curdate.getDate()==date2.getDate()){
+                    minutes += (date2.getTime() - date1.getTime())/60000;
+
+                } else if (curdate.getDate() == date1.getDate()){
+                    var close = new Date(startDate + " 22:00");
+                    minutes += (close.getTime() - date1.getTime())/60000;
+
+                } else if (curdate.getDate() == date2.getDate()) {
+                    var open = new Date(endDate + " 08:00");
+                    minutes += (date2.getTime() - open.getTime()) / 60000;
+
+                } else {
+                    minutes += (14 * 60);
+                }
+
+
+            }
+
+            curdate.setDate(curdate.getDate() + 1);
+
+
+        }
+
+        return minutes;
+    }
+    function trunc (i)
+    {
+        var j = Math.round(i * 100);
+        return Math.floor(j / 100) + (j % 100 > 0 ? "." + p(j % 100) : "");
+    }
+
+
+
+    </script>
+
+
+</head>
+<body onLoad = "onLoad()">
+<div align=”center”><img src="images/banner.png" alt="banner_stonybrook" width="100%" height="100px" border="0" align="middle"></div>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#" style="color:#FFFFFF">Instructor</a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav">
+                <li><a href="#ScheduleExam" style="color:#FFFFFF">Schedule Exam</a></li>
+                <li><a href="#" style="color:#FFFFFF">Import Roster</a></li>
+                <li><a href="#ExamList" style="color:#FFFFFF">Current Exams</a></li>
+                <li><a href="#" style="color:#FFFFFF">Cancel Exam</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+
+<div id="instructDiv">
+
+    <h3>Create Exam Request</h3>
+
+        <div id="about">
+            <div class="content3">
+                <FORM NAME="myform5" ACTION="" METHOD="POST"><BR>
+                    <FORM NAME="myform" ACTION="" METHOD="POST">Schedule Exam<BR>
+                        <INPUT TYPE="text" NAME="courseID" VALUE=""><p>Course Identifier</P>
+                            <INPUT TYPE="text" NAME="sectionNumber" VALUE=""><p>Section Number</P>
+                                <INPUT TYPE="number" NAME="examNumber" VALUE=""><p>Exam Number</P>
+                                    <INPUT TYPE="text" NAME="term" VALUE=""><p>Term</P>
+                                        <INPUT TYPE="number" NAME="duration" VALUE=""><p>Duration</P>
+                                            <input type="date" name="startDate" id="utilGet1"><p>Start Date</P>
+                                            <input type="time" NAME="startTime" VALUE=""><p>Start Time</P>
+                                            <input type="date"  name="endDate" id="utilGet2"><p>End Date</P>
+                                            <input type="time"  NAME="endTime" VALUE=""><p>End Time</p>
+
+                                            <label class="radio-inline"><input type="radio" name="typeExam" id="adhocVal">AdHoc</label>
+                                            <label class="radio-inline"><input type="radio" name="typeExam" id="regularVal">Regular</label>
+
+                                            <div>
+                                                <p>Add Students (Ad Hoc only)</p>
+                                                <textarea TYPE="text" name="adhocstudents"rows="4" cols="50"></textarea><p></p>
+                                                <input TYPE="text" NAME="adhocExamName" VALUE=""><p>Exam Name (Adhoc Only)</P>
+                                            </div>
+
+                                            <INPUT TYPE="button" class="btn btn-primary" NAME="button" Value="View Utilization" onClick="displayUtilization()">
+
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th>Utilization</th>
+                                                            <!--<th>Expected?</th>-->
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="utilizationRangeTableBody">
+
+                                                    </tbody>
+                                                </table>
+
+
+                                                <INPUT TYPE="button" class="btn btn-primary" NAME="button" Value="Submit" onClick="submitExamRequest(this.form)">
+                                                </FORM>
+                                            </FORM>
+                                        </div>
+                                    </div>
+
+            <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+        <h3>Current Exam Request Details</h3>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Exam Identifier</th>
+                <th>Start Date </th>
+                <th>Start Time </th>
+                <th>End Date </th>
+                <th>End Time </th>
+                <th>Current Status</th>
+                <th>Number of Students</th>
+                <th>Completed Exams</th>
+            </tr>
+            </thead>
+            <tbody id="coursesTable">
+            </tbody>
+        </table>
+
+            <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+        <h3>Delete Pending Exam Request</h3>
+        <FORM NAME="myform2" ACTION="" METHOD="POST"><BR>
+            <INPUT TYPE="boolean" NAME="examIdentifierDelete" VALUE="">Insert Exam Name<P>
+                <button type="button" class="btn btn-primary" onclick="deleteExam(myform2)">Submit</button>
+        </FORM>
+
+
+
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

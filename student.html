@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" >
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    <script src="http://www.parsecdn.com/js/parse-1.6.7.min.js"></script>
+
+    <!--Date Picker Stuff-->
+    <link rel= "stylesheet" href = "bootstrap-datetimepicker.css">
+    <script type="text/javascript" src="jquery-2.1.1.min.js"></script>
+    <script src="moment-with-locales.js"></script>
+    <script src="bootstrap-datetimepicker.js"></script>
+    <!--Date Picker Stuff-->
+
+    <title>Student</title>
+
+    <link rel="stylesheet" type="text/css" href="bootstrap_override.css">
+</head>
+
+<body>
+
+<div align=”center”><img src="images/banner.png" alt="banner_stonybrook" width="100%" height="100px" border="0" align="middle"></div>
+
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#" style="color:#FFFFFF">Instructor</a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav">
+                <li><a href="" style="color:#FFFFFF">Create Appointment</a></li>
+                <li><a href="" style="color:#FFFFFF">Cancel Appointment</a></li>
+                <li><a href="" style="color:#FFFFFF">List Appintments</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<br><br><br><br>
+
+<!--DIV for Student requesting to schedule an appointment-->
+<div>
+    <h2>Student Appointment Request</h2>
+
+    <div>
+
+        <div class="form-group">
+
+
+            <button style="display:inline" class="btn btn-primary pull-right" id="resetbtn" onclick="reset()">Start Over</button>
+          <br>
+
+            <h4>Exams Available: </h4>
+            <select class="form-control" id="examList">
+
+            </select>
+            <br>
+            <button class="btn btn-default" onclick="promptRanges()">Select</button>
+        </div>
+
+        <div class='col-md-5' id="dateInput">
+            <div class="form-group">
+                <h4>Date: </h4>
+                <div class='input-group date' id='datetimepicker0'>
+                    <input type='text' class="form-control" id="dp0"/>
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+                </div>
+                <button class="btn btn-default" onclick="displayTimeSlots()">Check Time Slots</button>
+                <p id="errorRange" style="color:red;"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="ssparent">
+        <h4>Select Slot: </h4>
+        <select class="form-control" id="slotSelector">
+
+        </select>
+        <button class="btn btn-default" onclick="newReadyStudentSchedulability()">Make Request</button>
+    </div>
+
+
+    <div>
+        <h3>Upcoming Appointments</h3>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Term</th>
+                <th>Exam Identifier</th>
+                <th>Date </th>
+                <th>Start Time </th>
+                <th>End Time </th>
+                <th>Seat Num</th>
+
+            </tr>
+            </thead>
+            <tbody id="upcomingStudentAppointments">
+            </tbody>
+        </table>
+        <h3>Past Appointments</h3>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Term</th>
+                <th>Exam Identifier</th>
+                <th>Date </th>
+                <th>Start Time </th>
+                <th>End Time </th>
+                <th>Seat Num</th>
+
+            </tr>
+            </thead>
+            <tbody id="pastStudentAppointments">
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+</div>
+<script type="text/javascript">
+    Parse.initialize("T37yx8jot7RnoFgBgzlvQlW8BHTV5hapHtzy4yNx", "BlVBlmfjcQKTlpJP7f1QHLjENaQ9RIPNP0kM99nF");
+
+    var gapTime = 0;
+
+
+    window.onload = function () {
+        $("#dateInput").hide();
+        $("#resetbtn").hide();
+        $("#oldDatePickerCode").hide();
+        $("#ssparent").hide();
+        setupView();
+        setupAppointments();
+
+    };
+
+    function setupAppointments() {
+        var user = Parse.User.current();
+        var studentId = user.get("username");
+
+        var TimeSlot = Parse.Object.extend("TimeSlot");
+        var query = new Parse.Query(TimeSlot);
+        query.equalTo("StudNetID", studentId);
+        query.find().then(function(slots) {
+
+            for (var i = 0; i < slots.length; i++) {
+                var slot = slots[i];
+
+                var startTime = new Date(slot.get("Date") + " " + slot.get("StartTime"));
+//                console.log(startTime);
+                var now = new Date();
+//                console.log(now);
+                if (startTime.getTime() < now.getTime()) {
+                    var parent = document.getElementById("pastStudentAppointments");
+
+
+                    row = document.createElement("tr");
+                    cell1 = document.createElement("td");
+                    cell2 = document.createElement("td");
+                    cell3 = document.createElement("td");
+                    cell4 = document.createElement("td");
+                    cell5 = document.createElement("td");
+                    cell6 = document.createElement("td");
+                    // cell7 = document.createElement("td");
+
+                    var examid = slot.get("ExamIdentifier");
+                    var term = examid.substring(examid.indexOf('_')+1, examid.lastIndexOf('_'));
+
+                    textnode1 = document.createTextNode(term);
+                    textnode2 = document.createTextNode(examid);
+                    textnode3 = document.createTextNode(slot.get("Date"));
+                    textnode4 = document.createTextNode(slot.get("StartTime"));
+                    textnode5 = document.createTextNode(slot.get("EndTime"));
+                    textnode6 = document.createTextNode(slot.get("SeatNum"));
+                   
+
+
+                    cell1.appendChild(textnode1);
+                    cell2.appendChild(textnode2);
+                    cell3.appendChild(textnode3);
+                    cell4.appendChild(textnode4);
+                    cell5.appendChild(textnode5);
+                   cell6.appendChild(textnode6);
+
+
+                    row.appendChild(cell1);
+                    row.appendChild(cell2);
+                    row.appendChild(cell3);
+                    row.appendChild(cell4);
+                    row.appendChild(cell5);
+                   row.appendChild(cell6);
+
+
+                    parent.appendChild(row);
+                } else {
+                    var parent = document.getElementById("upcomingStudentAppointments");
+
+
+                    row = document.createElement("tr");
+                    cell1 = document.createElement("td");
+                    cell2 = document.createElement("td");
+                    cell3 = document.createElement("td");
+                    cell4 = document.createElement("td");
+                    cell5 = document.createElement("td");
+                    cell6 = document.createElement("td");
+                    cell7 = document.createElement("td");
+
+                    var examid = slot.get("ExamIdentifier");
+                    var term = examid.substring(examid.indexOf('_')+1, examid.lastIndexOf('_'));
+
+                    textnode1 = document.createTextNode(term);
+                    textnode2 = document.createTextNode(examid);
+                    textnode3 = document.createTextNode(slot.get("Date"));
+                    textnode4 = document.createTextNode(slot.get("StartTime"));
+                    textnode5 = document.createTextNode(slot.get("EndTime"));
+                    textnode6 = document.createTextNode(slot.get("SeatNum"));
+                   
+                    var a = document.createElement("a");
+                    a.setAttribute("class", "glyphicon glyphicon-remove");
+                    a.setAttribute("id", slot.get("ExamIdentifier"));
+                    a.onclick = deleteAppointment;
+
+                    cell1.appendChild(textnode1);
+                    cell2.appendChild(textnode2);
+                    cell3.appendChild(textnode3);
+                    cell4.appendChild(textnode4);
+                    cell5.appendChild(textnode5);
+                    cell6.appendChild(textnode6);
+                    cell7.appendChild(a);
+
+
+
+                    row.appendChild(cell1);
+                    row.appendChild(cell2);
+                    row.appendChild(cell3);
+                    row.appendChild(cell4);
+                    row.appendChild(cell5);
+                    row.appendChild(cell6);
+                    row.appendChild(cell7);
+
+                    parent.appendChild(row);
+                }
+            }
+        });
+    }
+
+    function deleteAppointment() {
+        var examid = this.id;
+        console.log(examid);
+        var user = Parse.User.current();
+        var studentId = user.get("username");
+
+        var r = window.confirm("Deleting Appointment, Are you sure?");
+        if (r == true) {
+            console.log("deleting...");
+
+            var TimeSlot = Parse.Object.extend("TimeSlot");
+            var query = new Parse.Query(TimeSlot);
+            query.equalTo("ExamIdentifier", examid);
+            query.equalTo("StudNetID", studentId);
+            query.first({
+                success: function(slot) {
+                    if (slot != null) {
+                        console.log("got obj");
+                        slot.destroy({
+                            success: function(myObject) {
+                                alert("Deleted!");
+                                console.log("Deleted");
+                                location.reload();
+                            },
+                            error: function(myObject, error) {
+                                // The delete failed.
+                                // error is a Parse.Error with an error code and message.
+                                alert("Error deleting, try again later.");
+                                console.log("Error Deleting. " + error.message);
+                            }
+                        });
+                    }
+
+                },
+                error: function(error) {
+                    alert("Error: " + error.code + " " + error.message);
+                }
+            });
+
+
+
+
+        }
+    }
+
+    function setupView() {
+        var parent = document.getElementById("examList");
+        var user = Parse.User.current();
+        var studentId = user.get("username");
+        console.log("student: " + studentId);
+
+        var Roster = Parse.Object.extend("Roster");
+        var query = new Parse.Query(Roster);
+        query.equalTo("netID", studentId);
+        query.find().then(function(classIds) {
+           for (var i = 0; i < classIds.length; i++) {
+               var classid = classIds[i];
+               var Exam = Parse.Object.extend("Exam");
+               var query2 = new Parse.Query(Exam);
+               query2.equalTo("ClassID", classid.get("classID"));
+               query2.find().then(function(exams) {
+
+                  for (var j = 0; j < exams.length; j++) {
+                      var exam = exams[j];
+
+                      var TimeSlot = Parse.Object.extend("TimeSlot");
+                      var query3 = new Parse.Query(TimeSlot);
+                      query3.equalTo("ExamIdentifier", exam.get("ExamIdentifier"));
+                      query3.equalTo("StudNetID", studentId);
+                      query3.first().then(function(obj) {
+                          if (obj == null) {
+                              if (exam.get("CurrentStatus") == "approved") {
+                                  var now = new Date();
+                                  var endDate = new Date(exam.get('EndDate') + " " + exam.get('EndTime'));
+                                  console.log("Time now: " + now + ", End Time: " + endDate);
+                                  if (now.getTime() < endDate.getTime()) {
+                                      var a = document.createElement("option");
+                                      var textNode = document.createTextNode(exam.get('ExamIdentifier'));
+                                      a.appendChild(textNode);
+                                      parent.appendChild(a);
+                                  }
+                              }
+                          }
+                      });
+
+
+
+
+
+                  }
+               });
+           }
+        });
+
+    }
+
+
+    function promptRanges() {
+
+        $( "#examList" ).prop( "disabled", true );
+        $("#resetbtn").show();
+        var examid = document.getElementById("examList").value;
+        console.log("Exam Selected: " + examid);
+        var Exam = Parse.Object.extend("Exam");
+        var query = new Parse.Query(Exam);
+        query.equalTo("ExamIdentifier", examid);
+        query.first().then(function(e) {
+            if (e != null) {
+//                var minDate = new Date(e.get("StartDate") );
+                var maxDate = new Date(e.get("EndDate") );
+                $("#dateInput").show();
+                $('#datetimepicker0').datetimepicker({
+                    daysOfWeekDisabled: [0, 6],
+                    minDate: new Date(),
+                    maxDate: maxDate,
+                    format: 'MM/DD/YYYY'
+                });
+
+
+                var Info =  Parse.Object.extend("TCInfo");
+                var query1 = new Parse.Query(Info);
+                query1.equalTo("Term", e.get("Term"));
+                query1.first().then(function(item) {
+                    if (item != null){
+                        gapTime = parseInt(item.get("GapTime"))*60000;
+                    }
+                });
+
+            }
+        });
+
+
+    }
+
+    function displayTimeSlots() {
+        event.preventDefault();
+        $("#ssparent").show();
+        $("#dp0").prop("disabled", true);
+        var examid = document.getElementById("examList").value;
+        console.log("Exam Selected: " + examid);
+        var dateGotten = document.getElementById("dp0").value;
+        console.log("date: " + dateGotten );
+        var Exam = Parse.Object.extend("Exam");
+        var query1 = new Parse.Query(Exam);
+        query1.equalTo("ExamIdentifier", examid);
+        var dateObj = new Date(dateGotten);
+        query1.first().then(function(exam) {
+
+            console.log(dateObj);
+            if (exam != null) {
+                var sdate = new Date(exam.get('StartDate'));
+                var edate = new Date(exam.get('EndDate'));
+                var startTime = new Date(dateGotten + " 08:00:00");
+                console.log(startTime);
+                var endTime = new Date(dateGotten + " 22:00:00");
+                if (sdate.getDate() == dateObj.getDate() && sdate.getMonth() == dateObj.getMonth() && sdate.getFullYear() == dateObj.getFullYear()){
+                    startTime = new Date(dateGotten + " " + exam.get('StartTime') + ":00");
+                }
+                if (edate.getDate() == dateObj.getDate() && edate.getMonth() == dateObj.getMonth() && edate.getFullYear() == dateObj.getFullYear()){
+                    endTime = new Date(dateGotten + " " + exam.get('EndTime') + ":00");
+                }
+                var duration = parseInt(exam.get('Duration'))*60000;
+                var curTime = startTime;
+                console.log("curTime: " + curTime);
+                var tSlots = [];
+                while(curTime.getTime() < endTime.getTime()){
+                    var addedTime = new Date(curTime.getTime() + duration);
+                    var gapAdded = new Date(addedTime.getTime() + gapTime);
+                    if(addedTime.getTime() <= endTime.getTime()) {
+                        var s = {startTime: curTime, endTime: addedTime, gapAdded: gapAdded, taken: false };
+                        tSlots.push(s);
+                    }
+                    curTime = gapAdded;
+                }
+
+//                console.log(tSlots);
+
+
+
+                for(var k = 0; k < tSlots.length; k++){
+
+
+                    (function(k) {
+                        var v = tSlots[k];
+
+                        var slotparent = document.getElementById("slotSelector");
+                        var startCheck = v["startTime"];
+                        var endCheck = v["endTime"];
+                        var date = startCheck.getMonth() + "/" + startCheck.getDate() + "/" + startCheck.getFullYear();
+                        var avail = isAppointmentSchedualable(date, startCheck, endCheck, function (response) {
+                            if (parseInt(response) > 0 && parseInt(response) < 65) {
+//                                console.log("seat avail: " + response);
+
+//                            var st = tSlots[k];
+                                var option = document.createElement("option");
+                                option.setAttribute("id", examid);
+                                var starting = addZero(v["startTime"].getHours()) + ":" + addZero(v["startTime"].getMinutes());
+                                var ending = addZero(v["endTime"].getHours()) + ":" + addZero(v["endTime"].getMinutes());
+                                var textNode = document.createTextNode(starting + " - " + ending + " Seat Number: "+response);
+                                option.appendChild(textNode);
+                                slotparent.appendChild(option);
+
+                            }
+                        });
+                    })(k);
+
+
+
+
+                }
+
+
+            }
+
+        });
+
+
+
+
+    }
+
+    function callbackFor(v) {
+        var slotparent = document.getElementById("slotSelector");
+        var startCheck = v["startTime"];
+        var endCheck = v["endTime"];
+        var date = startCheck.getMonth() + "/" + startCheck.getDate() + "/" + startCheck.getFullYear();
+        return isAppointmentSchedualable(date, startCheck, endCheck, function (response) {
+            if (parseInt(response) > 0 && parseInt(response) < 65) {
+//                console.log("seat avail: " + response);
+
+//                            var st = tSlots[k];
+                var option = document.createElement("option");
+                var textNode = document.createTextNode(v["startTime"]);
+                option.appendChild(textNode);
+                slotparent.appendChild(option);
+
+            }
+        });
+    }
+
+
+    function reset() {
+        $( "#examList" ).prop( "disabled", false );
+        $("#dp0").prop("disabled", false);
+        $("#dateInput").hide();
+        $("#resetbtn").hide();
+        $("#dateInput").hide();
+        $("#ssparent").hide();
+        var slotparent = document.getElementById("slotSelector");
+        while (slotparent.firstChild) {
+            slotparent.removeChild(slotparent.firstChild);
+        }
+
+    }
+    function addZero(i) {
+        if (i < 10) {
+            i = "0" + i;
+        }
+        return i;
+    }
+
+    function newReadyStudentSchedulability(){
+        var selection = document.getElementById("slotSelector").value;
+        var examId = document.getElementById("examList").value;
+        var date = document.getElementById("dp0").value;
+        console.log("date:" + date);
+        var start = new Date(date + " " + selection.substring(0, 6));
+        var end = new Date(date + " " + selection.substring(8, 13));
+//        console.log(start);
+//        console.log(end);
+
+        var requestedTime = new Date(date + ' ' + start);
+        var available = isAppointmentSchedualable(date, start, end, function (response) {
+//                            alert(response);
+
+            if (parseInt(response) > 0 && parseInt(response) < 65) {
+                console.log("seat Exists!");
+                var TimeSlot = Parse.Object.extend("TimeSlot");
+                var slot = new TimeSlot();
+
+                var user = Parse.User.current();
+                var studentId = user.get("username");
+
+                slot.set("ExamIdentifier", examId);
+                slot.set("StudNetID", studentId);
+                slot.set("Date", date);
+                slot.set("StartTime", addZero(start.getHours()) + ":" + addZero(start.getMinutes()));
+                slot.set("EndTime", addZero(end.getHours()) + ":" + addZero(end.getMinutes()));
+                slot.set("SeatNum", response + "");
+                slot.set("Superfluous", false);
+                slot.set("CheckedIn", false);
+//                slot.set("GapTime", gapTime);
+                slot.set("SetAsideBool", false);
+                slot.save(null, {
+                    success: function (slot) {
+                        alert("Exam Scheduled! Seat Number: " + slot.get('SeatNum'));
+                        Parse.Cloud.run('sendmail', { email: user.getEmail(), date: date, timeOfExam: slot.get("StartTime")});
+
+
+                        location.reload();
+                    },
+                    error: function (slot, error) {
+                        alert("An error occurred. Please try again.");
+                        console.log("error: " + error.message);
+                    }
+                });
+
+            }
+        });
+    }
+
+
+
+
+
+    /**
+     * Checks if appointment slot chosen by student is available, returns boolean
+     * @param date from date picker as seen in above html
+     * @param startTime from time picker as in above html
+     * @param endTime from time picker as in above html
+     * @callback Callback must be implemented because function is asynchronous
+     * example of how to call with call back is seen in "checkStudentSchedulability()"
+     */
+    function isAppointmentSchedualable(date, startTime, endTime, callback) {
+
+        event.preventDefault();
+
+//            var startTime = new Date(date + " " + startTime);
+//            var endTime = new Date(date + " " + endTime);
+
+        var Exam = Parse.Object.extend("TimeSlot");
+        var query = new Parse.Query(Exam);
+
+        var countAvailable = 64;
+
+        query.find().then(function(exams) {
+
+            var seatsUnavail = [];
+            for (var i = 0; i < 64; i++) {
+                seatsUnavail.push(0);
+            }
+            for (var i = 0; i < exams.length; i++) {
+                var object = exams[i];
+                var start = new Date(object.get("Date") + " " + object.get("StartTime"));
+                var end = new Date(object.get("Date") + " " + object.get("EndTime"));
+
+
+                if (start.getTime() >= startTime.getTime() && start.getTime()<= endTime.getTime() ){
+                    countAvailable -= 1;
+                    seatsUnavail[object.get('SeatNum')-1] = 1;
+//                    console.log("Unavilable:" + object.get('SeatNum'));
+
+                } else if (end.getTime() >= startTime.getTime() && end.getTime()<= endTime.getTime() ) {
+                    countAvailable -= 1;
+                    seatsUnavail[object.get('SeatNum')-1] = 1;
+//                    console.log("Unavilable:" + object.get('SeatNum'));
+
+                } else if (start.getTime() <= startTime.getTime() && end.getTime() >= endTime.getTime() ) {
+                    countAvailable -= 1;
+                    seatsUnavail[object.get('SeatNum')-1] = 1;
+//                    console.log("Unavilable:" + object.get('SeatNum'));
+
+                }
+
+
+
+            }
+
+
+            console.log("seats available at given time: " + countAvailable);
+
+            var seatNumberToAssign = -1;
+            for ( var i = 0; i < seatsUnavail.length; i++) {
+                if (seatsUnavail[i] != 1) {
+                    seatNumberToAssign = i+1;
+                    break;
+                }
+            }
+            if (countAvailable > 0 && seatNumberToAssign != -1) {
+
+                callback(seatNumberToAssign);
+            } else {
+                callback(-1);
+            }
+
+
+        });
+
+    }
+
+
+
+
+
+
+
+</script>
+
+</body>
+</html>

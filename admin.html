@@ -1,0 +1,3062 @@
+<!DOCTYPE html>
+
+<title>Administrator</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="bootstrap_override.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+
+
+<!--Date Picker Stuff-->
+<link rel= "stylesheet" href = "bootstrap-datetimepicker.css">
+<script type="text/javascript" src="jquery-2.1.1.min.js"></script>
+<script src="moment-with-locales.js"></script>
+<script src="bootstrap-datetimepicker.js"></script>
+<!--Date Picker Stuff-->
+
+<script language="JavaScript">
+Parse.initialize("T37yx8jot7RnoFgBgzlvQlW8BHTV5hapHtzy4yNx", "BlVBlmfjcQKTlpJP7f1QHLjENaQ9RIPNP0kM99nF");
+
+var fileToUpload = 0;
+
+function setTestingCenterInformation(form){
+    var numSeats = form.numSeats.value;
+    var numSetAside = form.setAsideSeats.value;
+    var openTime = form.hoursFutureTermOpen.value;
+    var closeTime = form.hoursFutureTermClose.value;
+    var term = form.term.value;
+    var reminderInterval = form.reminderInterval.value;
+    var gapTime = form.gapTime.value;
+
+    var TCInfo = Parse.Object.extend("TCInfo");
+    var tcinfo = new TCInfo();
+
+    var query = new Parse.Query(tcinfo);
+    query.equalTo("Term", term);
+    query.first({
+        success: function (result) {
+            if(result === undefined){
+                var CreateTerm = Parse.Object.extend("TCInfo");
+                var termRow = new CreateTerm();
+
+                termRow.set('NumSeats', numSeats);
+                termRow.set('NumSetAside', numSetAside);
+                termRow.set('OpenTime', openTime);
+                termRow.set('CloseTime', closeTime);
+                termRow.set('GapTime', gapTime);
+                termRow.set('ReminderInterval', reminderInterval);
+                termRow.set('Term', term);
+
+                termRow.save(null, {
+                    success: function(gameScore) {
+                        alert("Term has been instantiated");
+                    },
+                    error: function(gameScore, error) {
+                        console.log(error.message);
+                    }
+                });
+
+            } else {
+                result.set('NumSeats', numSeats);
+                result.set('NumSetAside', numSetAside);
+                result.set('OpenTime', openTime);
+                result.set('CloseTime', closeTime);
+                result.set('GapTime', gapTime);
+                result.set('ReminderInterval', reminderInterval);
+                result.save();
+                alert("Information Updated");
+            }
+        },
+        error: function (exam, error) {
+            console.log("Error: " + error.code + " " + error.message);
+        }
+    });
+
+}
+
+function onLoad() {
+
+            //var path = window.location.pathname;
+            //var user = Parse.User.current();
+            fillTCInfoTable();
+            fillExamAptTable();
+            loadApts();
+            loadAptsByDate();
+        }
+
+        function clearTableApt(){
+            var tableBody = document.getElementById("aptTable");
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+        }
+
+        function clearTable(){
+            var tableBody = document.getElementById("examAptTable");
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+        }
+
+        function clearTableTC(){
+            var tableBody = document.getElementById("tcinfo");
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+        }
+
+        function fillTCInfoTable(){
+            clearTableTC();
+
+            var TCInfo = Parse.Object.extend("TCInfo");
+            var tcinfo = new TCInfo();
+            var tcquery = new Parse.Query(tcinfo);
+
+            tcquery.find({
+                success: function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var object = results[i];
+                        
+                        var object = results[i];
+
+                        console.log(object.get('CourseIdentifier'));
+
+                        tablebody = document.getElementById("tcinfo");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        textnode1 = document.createTextNode(object.get('NumSeats'));
+                        textnode2 = document.createTextNode(object.get('NumSetAside'));
+                        textnode3 = document.createTextNode(object.get('OpenTime'));
+                        textnode4 = document.createTextNode(object.get('CloseTime'));
+                        textnode5 = document.createTextNode(object.get('GapTime'));
+                        textnode6 = document.createTextNode(object.get('ReminderInterval'));
+                        textnode7 = document.createTextNode(object.get('Term'));
+                        cell1.appendChild(textnode1);
+                        cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        row.appendChild(cell1);
+                        row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+
+                        tablebody.appendChild(row);
+                    }
+
+                },
+                error: function(exam, error){
+                    alert("Error: " + error.code + " " + error.message);
+                }
+
+
+            });
+
+        }
+
+
+
+        function fillExamAptTable(){
+
+            clearTable();
+
+            var ProfessorNETID = Parse.User.current();
+            var Exam = Parse.Object.extend("Exam");
+            var exam = new Exam();
+            var query = new Parse.Query(exam);
+            //query.equalTo("ProfNetID", ProfessorNETID);
+            query.equalTo("Admin", true);
+
+            console.log("hello");
+            // alert(ProfessorNETID);
+            query.find({
+                success: function(results){
+                    console.log(results.length);
+                    for (var i = 0; i < results.length; i++) {
+                        var object = results[i];
+
+                        console.log(object.get('CourseIdentifier'));
+
+                        tablebody = document.getElementById("examAptTable");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        textnode1 = document.createTextNode(object.get('ExamIdentifier'));
+                        textnode2 = document.createTextNode(object.get('StartDate'));
+                        textnode3 = document.createTextNode(object.get('StartTime'));
+                        textnode4 = document.createTextNode(object.get('EndDate'));
+                        textnode5 = document.createTextNode(object.get('EndTime'));
+                        textnode6 = document.createTextNode(object.get('CurrentStatus'));
+                        cell1.appendChild(textnode1);
+                        cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        row.appendChild(cell1);
+                        row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        console.log("hello");
+
+                        tablebody.appendChild(row);
+                    }
+
+                },
+                error: function(exam, error){
+                    alert("Error: " + error.code + " " + error.message);
+                }
+
+
+            });
+}
+
+
+function uploadCSV(form, fileNumToBeUploaded) {
+        if(fileNumToBeUploaded == 1){                   //classes csv
+            var form = document.getElementById('file-form');
+            var fileSelect = document.getElementById('file-select');
+        }
+        else if(fileNumToBeUploaded == 2){              //roster csv
+            var form = document.getElementById('file-form2');
+            var fileSelect = document.getElementById('file-select2');
+        }
+        else if(fileNumToBeUploaded == 3){              //user csv
+            var form = document.getElementById('file-form3');
+            var fileSelect = document.getElementById('file-select3');
+        }
+        else if(fileNumToBeUploaded == 4){              //instructor csv
+            var form = document.getElementById('file-form4');
+            var fileSelect = document.getElementById('file-select4');
+        }
+        fileToUpload = fileNumToBeUploaded;
+        console.log(fileToUpload);
+
+        var uploadButton = document.getElementById('upload-button');
+        var files = fileSelect.files;
+        var file = files[0];
+        console.log(fileToUpload);
+        getAsText(file);
+    }
+
+    function getAsText(fileToRead) {
+        var reader = new FileReader();
+        reader.readAsText(fileToRead);
+        reader.onload = loadHandler;
+        reader.onerror = errorHandler;
+    }
+
+    function loadHandler(event) {
+        var csv = event.target.result;
+        processData(csv);
+    }
+
+    function processData(csv) {
+        var allTextLines = csv.split(/\r\n|\n/);
+        var lines = [];
+        for (var i=0; i<allTextLines.length; i++) {
+            var data = allTextLines[i].split(',');
+            var tarr = [];
+            for (var j=0; j<data.length; j++) {
+                tarr.push(data[j]);
+            }
+            lines.push(tarr);
+
+        }
+        console.log(lines);
+        uploadCSVtoParse(lines);
+    }
+
+
+    function errorHandler(evt) {
+        if(evt.target.error.name == "NotReadableError") {
+            alert("Cannot read file !");
+        }
+    }
+
+    function uploadCSVtoParse(classes) {
+        if(fileToUpload == 1) {
+            console.log("Classes Upload Access");
+            var ClassTable = Parse.Object.extend("Courses");
+
+            var i = 1;
+
+            function classLoop() {
+                setTimeout(function () {
+                    var classRecord = new ClassTable();
+
+                    var values = classes[i];
+                    var courseIdentifier = values[1] + '' + values[2] + '-' + values[3];
+                    var term = values[0].substring(values[0].indexOf('-') + 1, values[0].length);
+
+                    classRecord.set("ClassID", values[0]);
+                    classRecord.set("Term", term);
+                    classRecord.set("Subject", values[1]);
+                    classRecord.set("CatalogNum", values[2]);
+                    classRecord.set("Section", values[3]);
+                    classRecord.set("InstructorNetID", values[4]);
+                    classRecord.set("CourseIdentifier", courseIdentifier);
+
+                    console.log(courseIdentifier);
+
+                    classRecord.save(null, {
+                        success: function(gameScore) {
+
+                        },
+                        error: function(gameScore, error) {
+                            console.log(error.message + values[3] + ' ' + i) ;
+                        }
+                    });
+                    i++;
+                    if (i < classes.length) {
+                        classLoop();
+                    }
+                }, 100);
+
+}
+classLoop();
+}
+if(fileToUpload == 2){
+    console.log("Roster Upload Access");
+    var Roster = Parse.Object.extend("Roster");
+    deleteTable();
+    var i = 1;
+    rosterLoop();
+
+    function deleteTable(){
+        Roster = Parse.Object.extend("Roster");
+        var query = new Parse.Query(Roster);
+        query.limit(1000);
+        var flag = true;
+        console.log(Roster);
+                //setTimeout(function(){
+                    query.find({
+                        success: function(result){
+                            for(var i = 0; i < result.length; i++){
+                                if(result.length == 0){
+                                    console.log("hello my friend results is 0");
+                                    return;
+                                }
+                                console.log(result[i].get("netID"));
+                                result[i].destroy({
+                                    success:function(){
+                                        console.log("deleted");
+                                    }
+                                })
+                            }
+                            if(result[0] == undefined){
+                                return;
+                            }
+                            else{
+                                console.log("bro");
+                                deleteTable();
+                            }
+                        }
+                    });
+
+}
+            //     while(flag){
+            //     query.find({
+            //         success: function(result) {
+            //             console.log("success");
+            //             console.log(result);
+            //             if(result.length < 1000){
+            //                 flag = false;
+            //             }
+            //             for(var i=0; i<result.length; i++) {
+            //                 console.log("destroying" + i);
+            //                 result[i].destroy;
+            //             }
+            //         },
+            //         error: function(error) {
+            //             status.error("Error in delete query error: " + error);
+            //             alert('Error in delete query');
+            //         }
+            //     });
+            //     }
+            //}, 100);
+            //var i = 1;
+
+            function rosterLoop() {
+                setTimeout(function () {
+                    var roster = new Roster();
+                    var values = classes[i];
+
+                    roster.set("netID", values[0]);
+                    roster.set("classID", values[1]);
+
+                    console.log(values[0] + ' ' + values[1]);
+
+                    roster.save(null, {
+                        success: function(gameScore) {
+
+                        },
+                        error: function(gameScore, error) {
+                            console.log(error.message + values[3] + ' ' + i) ;
+                        }
+                    });
+                    i++;
+                    if (i < classes.length) {
+                        rosterLoop();
+                    }
+                }, 100);
+
+            }
+            //rosterLoop();
+
+        }
+        if(fileToUpload == 3){
+            console.log("User Upload Access");
+            var User = Parse.Object.extend("_User");
+
+
+
+
+
+            var i = 1;
+
+            function userLoop() {
+                setTimeout(function () {
+                    var user = new User();
+
+                    var values = classes[i];
+
+                    user.set("firstName", values[0]);
+                    user.set("lastName", values[1]);
+                    user.set("netID", values[2]);
+                    user.set("username", values[3]);
+                    user.set("email", values[3]);
+                    user.set("password", 'blank');
+                    user.set("userType", 'student');
+
+                    console.log(values[0] + ' ' + values[1] + ' ' + values[2] + ' ' + values[3]);
+
+                    user.save(null, {
+                        success: function(gameScore) {
+
+                        },
+                        error: function(gameScore, error) {
+                            console.log(error.message + values[3] + ' ' + i) ;
+                        }
+                    });
+                    i++;
+                    if (i < classes.length) {
+                        userLoop();
+                    }
+                }, 100);
+
+}
+userLoop();
+}
+if(fileToUpload == 4){
+    console.log("Instructor file upload");
+    var User = Parse.Object.extend("_User");
+
+    var i = 1;
+
+    function instructorLoop() {
+        setTimeout(function () {
+            var user = new User();
+
+            var values = classes[i];
+
+            user.set("lastName", values[0]);
+            user.set("firstName", values[1]);
+            user.set("userID", values[2]);
+            user.set("username", values[3]);
+            user.set("email", values[3]);
+            user.set("emailAddress", values[3])
+            user.set("userType", 'instructor');
+            user.set("password", 'blank');
+
+            console.log(values[0] + ' ' + values[1] + ' ' + values[2] + ' ' + values[3]);
+
+            user.save(null, {
+                success: function(gameScore) {
+
+                },
+                error: function(gameScore, error) {
+                    console.log(error.message) ;
+                }
+            });
+            i++;
+            if (i < classes.length) {
+                instructorLoop();
+            }
+        }, 100);
+
+    }
+    instructorLoop();
+}
+}
+
+function addClosingDateEntry() {
+    var num = parseInt(document.getElementById('closedTimesCount').innerHTML) + 1;
+    var tbody = document.getElementById("closedDateInputs");
+    var row = document.createElement("tr");
+    row.setAttribute("id", "rowNum" + num);
+
+
+
+    var cell1 = document.createElement("td");
+    var cell2 = document.createElement("td");
+    var cell3 = document.createElement("td");
+    var cell4 = document.createElement("td");
+    var input1 = document.createElement("input");
+    var input2 = document.createElement("input");
+    var input3 = document.createElement("input");
+    var xbutton = document.createElement("a");
+    input1.setAttribute("type", "date");
+    input2.setAttribute("type", "date");
+    input3.setAttribute("type", "text");
+    input1.setAttribute("id", "startRange" + num);
+    input2.setAttribute("id", "endRange" + num);
+    input3.setAttribute("id", "term" + num);
+    xbutton.setAttribute("class", "glyphicon glyphicon-remove");
+    xbutton.setAttribute("onclick", "removeAndRenameRow("+ num + ")");
+    xbutton.setAttribute("id", "xbutton"+ num);
+
+    cell1.appendChild(input1);
+    cell2.appendChild(input2);
+    cell3.appendChild(input3);
+    cell4.appendChild(xbutton);
+    row.appendChild(cell1);
+    row.appendChild(cell2);
+    row.appendChild(cell3);
+    row.appendChild(cell4);
+    tbody.appendChild(row);
+
+    var count = parseInt(document.getElementById('closedTimesCount').innerHTML);
+    document.getElementById('closedTimesCount').innerHTML = num;
+
+}
+
+function removeAndRenameRow(rowNum) {
+    var elem = document.getElementById('rowNum' + rowNum);
+    elem.parentNode.removeChild(elem);
+
+    var children = document.getElementById("closedDateInputs").childNodes;
+
+    for(var i = rowNum+1; i <= children.length; i++) {
+        var row = document.getElementById('rowNum' + i);
+        row.id = "rowNum" + (i-1);
+        var start = document.getElementById('startRange' + i);
+        start.id = "startRange" + (i-1);
+        var end = document.getElementById('endRange' + i);
+        end.id = "endRange" + (i-1);
+        var term = document.getElementById('term' + i);
+        term.id = "term" + (i-1);
+        var x = document.getElementById('xbutton' + i);
+        x.id = "xbutton" + (i-1);
+        x.setAttribute("onclick", "removeAndRenameRow("+ (i-1) + ")");
+
+    }
+    var count = parseInt(document.getElementById('closedTimesCount').innerHTML);
+    document.getElementById('closedTimesCount').innerHTML = (count -1)+"";
+
+}
+
+    // function saveClosedDates() {
+
+    // }
+
+
+    function addClosingRangeEntry() {
+        var num = parseInt(document.getElementById('closedRangeCount').innerHTML) + 1;
+        var tbody = document.getElementById("closedTimeInputs");
+        var row = document.createElement("tr");
+        row.setAttribute("id", "rowTimeNum" + num);
+
+
+
+        var cell1 = document.createElement("td");
+        var cell2 = document.createElement("td");
+        var cell3 = document.createElement("td");
+        var cell4 = document.createElement("td");
+        var cell5 = document.createElement("td");
+        var cell6 = document.createElement("td");
+        var input1 = document.createElement("input");
+        var input2 = document.createElement("input");
+        var input3 = document.createElement("input");
+        var input4 = document.createElement("input");
+        var input5 = document.createElement("input");
+        var xbtn = document.createElement("a");
+        input1.setAttribute("type", "date");
+        input2.setAttribute("type", "time");
+        input3.setAttribute("type", "date");
+        input4.setAttribute("type", "time");
+        input5.setAttribute("type", "text");
+
+        input1.setAttribute("id", "startDate" + num);
+        input2.setAttribute("id", "startTime" + num);
+        input3.setAttribute("id", "endDate" + num);
+        input4.setAttribute("id", "endTime" + num);
+        input5.setAttribute("id", "timeTermRange" + num);
+        xbtn.setAttribute("class", "glyphicon glyphicon-remove");
+        xbtn.setAttribute("onclick", "removeAndRenameTimeRow("+ num + ")");
+        xbtn.setAttribute("id", "xbtn"+ num);
+
+        cell1.appendChild(input1);
+        cell2.appendChild(input2);
+        cell3.appendChild(input3);
+        cell4.appendChild(input4);
+        cell5.appendChild(input5);
+        cell6.appendChild(xbtn);
+        row.appendChild(cell1);
+        row.appendChild(cell2);
+        row.appendChild(cell3);
+        row.appendChild(cell4);
+        row.appendChild(cell5);
+        row.appendChild(cell6);
+
+        tbody.appendChild(row);
+
+        var count = parseInt(document.getElementById('closedRangeCount').innerHTML);
+        document.getElementById('closedRangeCount').innerHTML = num;
+
+    }
+
+    function removeAndRenameTimeRow(rowNum) {
+        var elem = document.getElementById('rowTimeNum' + rowNum);
+        elem.parentNode.removeChild(elem);
+
+        var children = document.getElementById("closedTimeInputs").childNodes;
+
+        for(var i = rowNum+1; i <= children.length; i++) {
+            var row = document.getElementById('rowTimeNum' + i);
+            row.id = "rowTimeNum" + (i-1);
+            var start = document.getElementById('startDate' + i);
+            start.id = "startDate" + (i-1);
+            var startTime = document.getElementById('startTime' + i);
+            startTime.id = "startTime" + (i-1);
+            var end = document.getElementById('endDate' + i);
+            end.id = "endDate" + (i-1);
+            var endTime = document.getElementById('endTime' + i);
+            endTime.id = "endTime" + (i-1);
+            var term = document.getElementById('timeTermRange' + i);
+            term.id = "timeTermRange" + (i-1);
+            var x = document.getElementById('xbtn' + i);
+            x.id = "xbtn" + (i-1);
+            x.setAttribute("onclick", "removeAndRenameTimeRow("+ (i-1) + ")");
+
+        }
+        var count = parseInt(document.getElementById('closedRangeCount').innerHTML);
+        document.getElementById('closedRangeCount').innerHTML = (count -1)+"";
+
+    }
+
+    function makeJSON(tbody) {
+
+        var children = tbody.childNodes;
+        console.log(children.length + " children");
+        var jsonString = '';
+        if (tbody.id == "closedDateInputs") {
+
+            jsonString = '{"ClosedDates": [';
+            for (var i = 1; i <= children.length; i++) {
+                var str1 = ((document.getElementById("startRange" + i)||{}).value)||"";
+                var str2 = ((document.getElementById("endRange" + i)||{}).value)||"";
+                var str3 = ((document.getElementById("term" + i)||{}).value)||"";
+                if (str1 != "" && str2 != "" && str3 != "") {
+                    var childString = '{"StartDate": "' + (document.getElementById("startRange" + i).value) + '", ';
+                    childString = childString.concat('"EndDate": "' + (document.getElementById("endRange" + i).value) + '", ');
+                    childString = childString.concat('"Term": "' + (document.getElementById("term" + i).value) + '"}');
+
+                    jsonString = jsonString.concat(childString);
+                }
+            }
+        } else if (tbody.id == "closedTimeInputs") {
+            jsonString = '{"ReservedTimes": [';
+
+            for (var i = 1; i <= children.length; i++) {
+                var str1 = ((document.getElementById("startDate" + i)||{}).value)||"";
+                var str2 = ((document.getElementById("startTime" + i)||{}).value)||"";
+                var str3 = ((document.getElementById("endDate" + i)||{}).value)||"";
+                var str4 = ((document.getElementById("endTime" + i)||{}).value)||"";
+                var str5 = ((document.getElementById("timeTermRange" + i)||{}).value)||"";
+                if (str1 != "" && str2 != "" && str3 != "" && str4 != "" && str5 != "") {
+                    var childString = '{"StartDate": "' + (document.getElementById("startDate" + i).value) + '", ';
+                    childString = childString.concat('"StartTime": "' + (document.getElementById("startTime" + i).value) + '", ');
+                    childString = childString.concat('"EndDate": "' + (document.getElementById("endDate" + i).value) + '", ');
+                    childString = childString.concat('"EndTime": "' + (document.getElementById("endTime" + i).value) + '", ');
+                    childString = childString.concat('"Term": "' + (document.getElementById("timeTermRange" + i).value) + '"}');
+
+                    jsonString = jsonString.concat(childString);
+                }
+            }
+        }
+
+        jsonString = jsonString.concat(']}');
+        jsonString = jsonString.replace(/}{/g,'},{' );
+        console.log(jsonString)
+        var json = JSON.parse(jsonString);
+        console.log(json);
+        return json;
+
+    }
+
+
+
+    function saveClosedDates() {
+        var dates = document.getElementById("closedDateInputs");
+        var datesClosed = makeJSON(dates);
+        console.log("Dates Closed:");
+
+        //MAKE LOOP HERE
+
+        var differenceArray = getDayDifferenceArray(datesClosed["ClosedDates"][0]["StartDate"], datesClosed["ClosedDates"][0]["EndDate"]);
+
+        var term = datesClosed["ClosedDates"][0]["Term"];
+
+        scheduleClosedGapDates(differenceArray, term);
+    }
+
+
+    function  changeToInt(s) {
+        var b = s.substring(0, 4) + '-' + s.substring(4,7) + '-' + s.substring(7, s.length);
+        s = b.replace(/--/g,'-');
+        // var a = parseInt(s);
+        // console.log("newstr: " + s);
+        return s;
+    }
+
+    function scheduleClosedGapDates(differenceArray, term){
+        var ClosedReserved = Parse.Object.extend("ClosedReserved");
+
+        var i = 0;
+
+        function scheduleLoop() {
+            setTimeout(function () {
+                var closedReserved = new ClosedReserved();
+
+                closedReserved.set("date", differenceArray[i]);
+                closedReserved.set("centerStatus", 'Closed');
+                closedReserved.set("startTime", '08:00');
+                closedReserved.set("endTime", '22:00');
+                closedReserved.set('term', term);
+
+                console.log(differenceArray[i]);
+
+                closedReserved.save(null, {
+                    success: function(gameScore) {
+
+                    },
+                    error: function(gameScore, error) {
+                        console.log(error.message + values[3] + ' ' + i) ;
+                    }
+                });
+                i++;
+                if (i < differenceArray.length) {
+                    scheduleLoop();
+                }
+            }, 100);
+
+        }
+        scheduleLoop();
+    }
+
+    function saveClosedTimes(times) {
+        var times = document.getElementById("closedTimeInputs");
+        var reservedTimes = makeJSON(times);
+
+        //CREATE A LOOP HERE!
+
+        var differenceArray = getDayDifferenceArray(reservedTimes["ReservedTimes"][0]["StartDate"],reservedTimes["ReservedTimes"][0]["EndDate"]);
+
+
+        console.log("Times Closed:");
+        console.log(differenceArray);
+
+        var startTime = reservedTimes["ReservedTimes"][0]["StartTime"];
+        var endTime = reservedTimes["ReservedTimes"][0]["EndTime"];
+        var term = reservedTimes["ReservedTimes"][0]["Term"];
+
+        scheduleReservedTimes(differenceArray, startTime, endTime, term);
+
+    }
+
+    function scheduleReservedTimes(differenceArray, startTime, endTime, term){
+        var ClosedReserved = Parse.Object.extend("ClosedReserved");
+
+        var i = 0;
+
+        function reservedTimeLoop() {
+            setTimeout(function () {
+                var closedReserved = new ClosedReserved();
+
+                closedReserved.set("date", differenceArray[i]);
+                closedReserved.set("centerStatus", "Reserved");
+                closedReserved.set("startTime", '08:00');
+                closedReserved.set("endTime", '22:00');
+                closedReserved.set("term", term);
+
+                if(i == 0){
+                    closedReserved.set("startTime", startTime);
+                }
+                if(i == differenceArray.length - 1){
+                    closedReserved.set("endTime", endTime)
+                }
+
+                console.log(differenceArray[i]);
+
+                closedReserved.save(null, {
+                    success: function(gameScore) {
+
+                    },
+                    error: function(gameScore, error) {
+                        console.log(error.message + values[3] + ' ' + i) ;
+                    }
+                });
+                i++;
+                if (i < differenceArray.length) {
+                    reservedTimeLoop();
+                }
+            }, 100);
+
+}
+reservedTimeLoop();
+
+}
+
+    //Added stuff for utilization starting here
+
+    $(function () {
+
+        $('#datetimepicker1').datetimepicker({
+            daysOfWeekDisabled: [0, 6],
+            format: 'MM/DD/YYYY'
+        });
+        $('#datetimepicker2').datetimepicker({
+            useCurrent: false,
+            daysOfWeekDisabled: [0, 6],
+            format: 'MM/DD/YYYY'
+        });
+        $("#datetimepicker1").on("dp.change", function (e) {
+            $('#datetimepicker2').data("DateTimePicker").minDate(e.date);
+        });
+        $("#datetimepicker2").on("dp.change", function (e) {
+            $('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
+        });
+
+    });
+
+    function displayUtilization(){
+        var utilFrom = document.getElementById("utilizationDate1").value;
+        var utilTo = document.getElementById("utilizationDate2").value;
+
+        console.log(utilFrom);
+        console.log(utilTo);
+
+        checkUtilOld(utilFrom,utilTo);
+
+    }
+
+    /**
+     * Displays the Utilization for the dates in a range
+     * @param fromDate in mm/dd/yyyy format string of starting date in range
+     * @param toDate in mm/dd/yyyy format string of ending date in range
+     */
+     function checkUtilOld( fromDate, toDate) {
+
+        var from = changeToIntOld(fromDate);
+        var to = changeToIntOld(toDate);
+
+        var dayArray = getDayDifferenceArrayOld(fromDate, toDate);
+        // var exams;
+
+        var Exams = Parse.Object.extend("Exam");
+        var query1 = new Parse.Query(Exams);
+        query1.find().then(function(exams) {
+            // exams = exams1;
+
+            var Exam = Parse.Object.extend("TimeSlot");
+            var query = new Parse.Query(Exam);
+            query.find({
+                success: function(results) {
+                    // Do something with the returned Parse.Object values
+                    for (var i = 0; i < results.length; i++) {
+                        var object = results[i];
+
+                        // var date = changeToInt(object.get('Date'));
+
+                        var resultsArray = results;
+
+
+
+                    }
+                    calculateAndPopulate(dayArray,resultsArray, exams);
+                },
+                error: function(error) {
+                    alert("Error: " + error.code + " " + error.message);
+                }
+            });
+        });
+
+    }
+
+    /**
+     * Calculates the Utilization percent and populates the table in htm
+     * @param dayArray the array that holds the day and its information
+     * @param resultsArray pulled from Parse, the whole TimeSlots Table
+     * @param exams
+     */
+     function calculateAndPopulate (dayArray, resultsArray, exams) {
+
+
+        // get current date
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1;
+        var yyyy = today.getFullYear();
+        if(dd<10){
+            dd='0'+dd
+        }
+        if(mm<10){
+            mm='0'+mm
+        }
+        var today = mm+'/'+dd+'/'+yyyy;
+        var dateNow = changeToIntOld(today);
+//        var exams = getExamInfo();
+
+for (var j = 0; j < resultsArray.length; j++){
+            //var duration = 0;
+            var rdate = changeToIntOld(resultsArray[j].get('Date'));
+            for (var k = 0; k < dayArray.length; k++) {
+                var a = dayArray[k];
+//alert(a[0]);
+var date = changeToIntOld(a[0]);
+
+                //  alert(rdate + "..." + date);
+                if (date == rdate && date < dateNow) {
+                    var d = getDurationOld(resultsArray[j].get('StartTime'), resultsArray[j].get('EndTime'));
+                    dayArray[k][2] += d;
+
+                    var util = dayArray[k][2]/(64*(14*3600));
+
+                    dayArray[k][1] = (Math.round((util*100) * 1000) / 1000);
+
+                } else if (date == rdate && date >= dateNow) {
+//                    alert("in here");
+var d = getDurationOld(resultsArray[j].get('StartTime'), resultsArray[j].get('EndTime'));
+dayArray[k][2] += d;
+
+var util = dayArray[k][2]/(64*(14*3600));
+
+dayArray[k][1] = 100 - (Math.round((util*100) * 1000) / 1000);
+
+
+
+}
+
+}
+}
+
+
+
+tableBody = document.getElementById("utilizationRangeTableBody");
+while (tableBody.firstChild) {
+    tableBody.removeChild(tableBody.firstChild);
+}
+for (var i = 0; i < dayArray.length ; i++) {
+
+
+    row = document.createElement("tr");
+    cell1 = document.createElement("td");
+    cell2 = document.createElement("td");
+    cell3 = document.createElement("td");
+
+    var a = dayArray[i];
+    var dat = changeToIntOld(a[0]);
+
+    textnode1 = document.createTextNode(a[0]);
+
+    if (isNaN(a[1])) {
+        textnode2 = document.createTextNode("0%");
+    } else {
+
+        textnode2 = document.createTextNode(a[1] + "%");
+    }
+
+//            alert(dateNow);
+//            alert(dat);
+if ( dat >= dateNow) {
+    textnode3 = document.createTextNode("YES");
+
+} else {
+    textnode3 = document.createTextNode("NO");
+}
+
+console.log(a[0],a[1],a[2]);
+console.log(textnode1, textnode2, textnode3);
+
+cell1.appendChild(textnode1);
+cell2.appendChild(textnode2);
+cell3.appendChild(textnode3);
+
+row.appendChild(cell1);
+row.appendChild(cell2);
+//            row.appendChild(cell3);
+
+
+tableBody.appendChild(row);
+}
+}
+    /**
+     * Get the duration between two specified times
+     * @params start the starting time as string
+     * @params end the ending time as string
+     * @returns int the difference between the start and end in seconds
+     */
+     function getDurationOld(start, end ){
+
+        var sm = 0;
+        var sh = 0;
+        var em = 0;
+        var eh = 0;
+
+        if (start.substring(6,start.length) == "PM") {
+            sm = parseInt(start.substring(3,5));
+            sh = parseInt(start.substring(0,2)) + 12;
+
+
+        } else{
+            sm = parseInt(start.substring(3,5));
+            sh = parseInt(start.substring(0,2));
+        }
+
+        if (end.substring(6, end.length) == "PM") {
+            em = parseInt(end.substring(3,5));
+            eh = parseInt(end.substring(0,2)) + 12;
+            //alert(eh);
+
+        } else{
+            em = parseInt(end.substring(3,5));
+            eh = parseInt(end.substring(0,2));
+        }
+
+
+
+        var startSec = (sh * 3600) + (sm*60);
+        var endSec = (eh * 3600) + (em*60);
+
+        var difference = Math.abs(endSec-startSec);
+        return difference ;
+
+    }
+
+    /**
+     * Get the difference in days and creates an array of all dates within the range
+     * @param from the starting date in the range inclusive
+     * @param to the ending date in the range inclusive
+     * @returns an array of arrays containing incremented dates
+     */
+     function getDayDifferenceArrayOld (from, to) {
+//        alert(from + " " + to);
+var date1 = new Date(from);
+var date2 = new Date(to);
+var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+var array = new Array();
+var date = from;
+
+for (var i = 0; i < diffDays; i++) {
+    var newarray = new Array();
+    newarray.push(date);
+    newarray[2] = 0;
+    array.push(newarray);
+    date = incrementDateOld(date);
+
+}
+
+var newarray = new Array();
+newarray.push(date);
+newarray[2] = 0;
+array.push(newarray);
+
+return array;
+
+}
+
+
+function getDayDifferenceOld (from, to) {
+    var date1 = new Date(from);
+    var date2 = new Date(to);
+    var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+    var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return diffDays;
+}
+    /**
+     * Increments date
+     * @param from is the date that needs to be incremented as string
+     * @returns string in the for of the incremented date
+     */
+     function incrementDateOld(from) {
+        var dd = parseInt(from.substring(3,5));
+        var mm = parseInt(from.substring(0,2));
+        var yyyy = parseInt(from.substring(6, from.length));
+
+        if (mm == 01 ||mm == 03 || mm == 05 ||mm == 07 ||mm == 08 ||mm == 10 ||mm == 12 ){
+            if (dd == 31 && mm != 12) {
+                return ((mm+1) + '/01/'+ from.substring(6,from.length));
+            } else if (dd == 31 && mm == 12){
+                return ("01/01/" + (yyyy + 1));
+            } else {
+                return (mm +"/"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) +"/" + from.substring(6, from.length));
+            }
+
+        } else if (mm == 02) {
+            if (dd == 28 || dd == 29) {
+                return ("03/01/" + from.substring(6, from.length));
+            } else {
+                return (mm +"/"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) + "/" + from.substring(6, from.length));
+            }
+        } else {
+            if (dd == 30 ){
+                return ((mm+1) + '/01'+ from.substring(6,from.length));
+            }else {
+                return (mm +"/"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) + "/" + from.substring(6, from.length));
+            }
+
+
+        }
+
+
+    }
+    /**
+     * Changes the time as a string to an int as specified
+     * @param s date in the form of mm/dd/yyyy
+     * @returns int in the form of yyyymmdd
+     */
+     function  changeToIntOld(s) {
+//        alert(s);
+var b = s.substring(6, s.length) + '/' + s.substring(0,5);
+//        alert(b);
+s = b.replace(/\//g,'');
+var a = parseInt(s);
+return a;
+}
+
+
+
+    //End adding old Utilization code
+
+    function getDayDifferenceArray (from, to) {
+        from = changeToInt(from);
+        to = changeToInt(to);
+        // console.log('FROM ' + from);
+        // console.log('TO ' + to);
+        var date1 = new Date(from);
+        var date2 = new Date(to);
+        var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+        var array = new Array();
+        var date = from;
+        array.push(date);
+        for (var i = 0; i < diffDays; i++) {
+            // var newarray = new Array();
+            // newarray.push(date);
+            // newarray[2] = 0;
+
+            date = incrementDate(date);
+            array.push(date);
+            // console.log(date);
+
+        }
+
+        return array;
+    }
+
+    function incrementDate(from) {
+        var dd = parseInt(from.substring(8,from.length));
+        var mm = parseInt(from.substring(5,7));
+        var yyyy = parseInt(from.substring(0, 4));
+
+        if (mm == 01 ||mm == 03 || mm == 05 ||mm == 07 ||mm == 08 ||mm == 10 ||mm == 12 ){
+            if (dd == 31 && mm != 12) {
+                return (from.substring(0, 4) + "-" + (mm+1) + '-01');
+            } else if (dd == 31 && mm == 12){
+                return ((yyyy + 1) + "-01-01");
+            } else {
+                return (from.substring(0, 4)  +"-"+ mm  +"-" + ((dd+1 < 10)?'0'+(dd+1): (dd+1)));
+            }
+
+        } else if (mm == 02) {
+            if (dd == 28 || dd == 29) {
+                return (from.substring(0, 4) + "-03-01" );
+            } else {
+                return (from.substring(0, 4)+"-"+ mm + "-" + ((dd+1 < 10)?'0'+(dd+1): (dd+1)) );
+            }
+        } else {
+            if (dd == 30 ){
+                return (from.substring(0, 4) + "-" + (mm+1) + '-01');
+            }else {
+                return (from.substring(0, 4) + "-" + mm +"-"+ ((dd+1 < 10)?'0'+(dd+1): (dd+1)) );
+            }
+
+
+        }
+    }
+
+    function acceptDenyExam(form){
+        var deny = document.getElementById('delete').checked;
+        var accept = document.getElementById('approve').checked;
+        var identifier = form.examAcceptDeny.value;
+
+        if(accept){
+            var Exam = Parse.Object.extend("Exam");
+            var exam = new Exam();
+            var query = new Parse.Query(exam);
+            query.equalTo("ExamIdentifier", identifier);
+
+            query.first({
+                success: function(result){
+                    var currentStatus = result.get("CurrentStatus");
+
+                    if(currentStatus == 'pending'){
+                        console.log("HI");
+                        result.set('CurrentStatus', 'approved');
+                        result.save();
+                        fillExamAptTable();
+                            //OMAR ADDED SOME BASED CODE HERE
+                            var Student = Parse.Object.extend("Roster");
+                            var student = new Student();
+                            var newQuery = new Parse.Query(student);
+                            newQuery.equalTo("classID", result.get('ClassID'));
+                            console.log("results calss id " + result.get('ClassID'));
+                            newQuery.find({
+                                success: function(studentResult){
+                                    console.log("student result");
+                                    console.log(studentResult);
+                                    for(var i = 0; i < studentResult.length; i++){
+                                        var User = Parse.Object.extend("_User");
+                                        var user = new User();
+                                        var emailQuery = new Parse.Query(user);
+                                        console.log(studentResult[i]);
+                                        emailQuery.equalTo("netID", studentResult[i].get("netID"));
+                                        emailQuery.first({
+                                            success: function(userResult){
+                                                console.log("userresult");
+                                                Parse.Cloud.run('sendAllStudentsMail',  { email: userResult.getEmail() , startDate: result.get("StartDate"), endDate: result.get("EndDate") }, undefined);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+}
+
+},
+error: function(exam, error){
+    alert("Error: " + error.code + " " + error.message);
+}
+
+
+});
+}
+
+if(deny){
+    var Exam = Parse.Object.extend("Exam");
+    var exam = new Exam();
+    var query = new Parse.Query(exam);
+    query.equalTo("ExamIdentifier", identifier);
+
+    query.first({
+        success: function(result){
+            var currentStatus = result.get("CurrentStatus");
+
+            if(currentStatus == 'pending'){
+                result.set('CurrentStatus', 'denied');
+                result.save();
+                fillExamAptTable();
+            }
+
+        },
+        error: function(exam, error){
+            alert("Error: " + error.code + " " + error.message);
+        }
+
+
+    });
+}
+}
+
+    //new code
+
+    var gapTime = 0;
+
+
+    window.onload = function () {
+        $("#dateInput").hide();
+        $("#resetbtn").hide();
+        $("#oldDatePickerCode").hide();
+        $("#ssparent").hide();
+        //setupView();
+
+    };
+
+    function setupView() {
+        var parent = document.getElementById("examList");
+       // var user = Parse.User.current();
+       // var studentId = user.get("username");
+       var studentId = document.getElementById('studentNetIDVal').value;
+       console.log("student: " + studentId);
+
+       var Roster = Parse.Object.extend("Roster");
+       var query = new Parse.Query(Roster);
+       query.equalTo("netID", studentId);
+       query.find().then(function(classIds) {
+           for (var i = 0; i < classIds.length; i++) {
+               var classid = classIds[i];
+               var Exam = Parse.Object.extend("Exam");
+               var query2 = new Parse.Query(Exam);
+               query2.equalTo("ClassID", classid.get("classID"));
+               query2.find().then(function(exams) {
+
+                  for (var j = 0; j < exams.length; j++) {
+                      var exam = exams[j];
+
+                      var TimeSlot = Parse.Object.extend("TimeSlot");
+                      var query3 = new Parse.Query(TimeSlot);
+                      query3.equalTo("ExamIdentifier", exam.get("ExamIdentifier"));
+                      query3.equalTo("StudNetID", studentId);
+                      query3.first().then(function(obj) {
+                          if (obj == null) {
+                              if (exam.get("CurrentStatus") == "approved") {
+                                  var now = new Date();
+                                  var endDate = new Date(exam.get('EndDate') + " " + exam.get('EndTime'));
+                                  console.log("Time now: " + now + ", End Time: " + endDate);
+                                  if (now.getTime() < endDate.getTime()) {
+                                      var a = document.createElement("option");
+                                      var textNode = document.createTextNode(exam.get('ExamIdentifier'));
+                                      a.appendChild(textNode);
+                                      parent.appendChild(a);
+                                  }
+                              }
+                          }
+                      });
+
+
+
+
+
+                  }
+              });
+}
+});
+
+}
+
+
+function promptRanges() {
+
+    $( "#examList" ).prop( "disabled", true );
+    $("#resetbtn").show();
+    var examid = document.getElementById("examList").value;
+    console.log("Exam Selected: " + examid);
+    var Exam = Parse.Object.extend("Exam");
+    var query = new Parse.Query(Exam);
+    query.equalTo("ExamIdentifier", examid);
+    query.first().then(function(e) {
+        if (e != null) {
+//                var minDate = new Date(e.get("StartDate") );
+var maxDate = new Date(e.get("EndDate") );
+$("#dateInput").show();
+$('#datetimepicker0').datetimepicker({
+    daysOfWeekDisabled: [0, 6],
+    minDate: new Date(),
+    maxDate: maxDate,
+    format: 'MM/DD/YYYY'
+});
+
+
+var Info =  Parse.Object.extend("TCInfo");
+var query1 = new Parse.Query(Info);
+query1.equalTo("Term", e.get("Term"));
+query1.first().then(function(item) {
+    if (item != null){
+        gapTime = parseInt(item.get("GapTime"))*60000;
+    }
+});
+
+}
+});
+
+
+}
+
+function displayTimeSlots() {
+    event.preventDefault();
+    $("#ssparent").show();
+    $("#dp0").prop("disabled", true);
+    var examid = document.getElementById("examList").value;
+    console.log("Exam Selected: " + examid);
+    var dateGotten = document.getElementById("dp0").value;
+    console.log("date: " + dateGotten );
+    var Exam = Parse.Object.extend("Exam");
+    var query1 = new Parse.Query(Exam);
+    query1.equalTo("ExamIdentifier", examid);
+    var dateObj = new Date(dateGotten);
+    query1.first().then(function(exam) {
+
+        console.log(dateObj);
+        if (exam != null) {
+            var sdate = new Date(exam.get('StartDate'));
+            var edate = new Date(exam.get('EndDate'));
+            var startTime = new Date(dateGotten + " 08:00:00");
+            console.log(startTime);
+            var endTime = new Date(dateGotten + " 22:00:00");
+            if (sdate.getDate() == dateObj.getDate() && sdate.getMonth() == dateObj.getMonth() && sdate.getFullYear() == dateObj.getFullYear()){
+                startTime = new Date(dateGotten + " " + exam.get('StartTime') + ":00");
+            }
+            if (edate.getDate() == dateObj.getDate() && edate.getMonth() == dateObj.getMonth() && edate.getFullYear() == dateObj.getFullYear()){
+                endTime = new Date(dateGotten + " " + exam.get('EndTime') + ":00");
+            }
+            var duration = parseInt(exam.get('Duration'))*60000;
+            var curTime = startTime;
+            console.log("curTime: " + curTime);
+            var tSlots = [];
+            while(curTime.getTime() < endTime.getTime()){
+                var addedTime = new Date(curTime.getTime() + duration);
+                var gapAdded = new Date(addedTime.getTime() + gapTime);
+                if(addedTime.getTime() <= endTime.getTime()) {
+                    var s = {startTime: curTime, endTime: addedTime, gapAdded: gapAdded, taken: false };
+                    tSlots.push(s);
+                }
+                curTime = gapAdded;
+            }
+
+            console.log(tSlots);
+
+
+
+            for(var k = 0; k < tSlots.length; k++){
+
+
+                (function(k) {
+                    var v = tSlots[k];
+
+                    var slotparent = document.getElementById("slotSelector");
+                    var startCheck = v["startTime"];
+                    var endCheck = v["endTime"];
+                    var date = startCheck.getMonth() + "/" + startCheck.getDate() + "/" + startCheck.getFullYear();
+                    var avail = isAppointmentSchedualable(date, startCheck, endCheck, function (response) {
+                        if (parseInt(response) > 0 && parseInt(response) < 65) {
+                            console.log("seat avail: " + response);
+
+//                            var st = tSlots[k];
+var option = document.createElement("option");
+option.setAttribute("id", examid);
+var starting = addZero(v["startTime"].getHours()) + ":" + addZero(v["startTime"].getMinutes());
+var ending = addZero(v["endTime"].getHours()) + ":" + addZero(v["endTime"].getMinutes());
+var textNode = document.createTextNode(starting + " - " + ending + " Seat Number: "+response);
+option.appendChild(textNode);
+slotparent.appendChild(option);
+
+}
+});
+                })(k);
+
+
+
+
+            }
+
+
+        }
+
+    });
+
+
+
+
+}
+
+function callbackFor(v) {
+    var slotparent = document.getElementById("slotSelector");
+    var startCheck = v["startTime"];
+    var endCheck = v["endTime"];
+    var date = startCheck.getMonth() + "/" + startCheck.getDate() + "/" + startCheck.getFullYear();
+    return isAppointmentSchedualable(date, startCheck, endCheck, function (response) {
+        if (parseInt(response) > 0 && parseInt(response) < 65) {
+            console.log("seat avail: " + response);
+
+//                            var st = tSlots[k];
+var option = document.createElement("option");
+var textNode = document.createTextNode(v["startTime"]);
+option.appendChild(textNode);
+slotparent.appendChild(option);
+
+}
+});
+}
+
+
+function reset() {
+    $( "#examList" ).prop( "disabled", false );
+    $("#dp0").prop("disabled", false);
+    $("#dateInput").hide();
+    $("#resetbtn").hide();
+    $("#dateInput").hide();
+    $("#ssparent").hide();
+    var slotparent = document.getElementById("slotSelector");
+    while (slotparent.firstChild) {
+        slotparent.removeChild(slotparent.firstChild);
+    }
+
+}
+function addZero(i) {
+    if (i < 10) {
+        i = "0" + i;
+    }
+    return i;
+}
+
+function newReadyStudentSchedulability(){
+    var selection = document.getElementById("slotSelector").value;
+    var examId = document.getElementById("examList").value;
+    var date = document.getElementById("dp0").value;
+    var start = new Date(date + " " + selection.substring(0, 6));
+    var end = new Date(date + " " + selection.substring(8, 13));
+    console.log(start);
+    console.log(end);
+
+    var requestedTime = new Date(date + ' ' + start);
+    var available = isAppointmentSchedualable(date, start, end, function (response) {
+//                            alert(response);
+
+if (parseInt(response) > 0 && parseInt(response) < 65) {
+    console.log("seat Exists!");
+    var TimeSlot = Parse.Object.extend("TimeSlot");
+    var slot = new TimeSlot();
+
+               // var user = Parse.User.current();
+               // var studentId = user.get("username");
+               var studentId = document.getElementById('studentNetIDVal').value;
+
+               slot.set("ExamIdentifier", examId);
+               slot.set("StudNetID", studentId);
+               slot.set("Date", date);
+               slot.set("StartTime", addZero(start.getHours()) + ":" + addZero(start.getMinutes()));
+               slot.set("EndTime", addZero(end.getHours()) + ":" + addZero(end.getMinutes()));
+               slot.set("SeatNum", response + "");
+               slot.set("Superfluous", false);
+               slot.set("CheckedIn", false);
+               slot.set("GapTime", gapTime);
+               slot.set("SetAsideBool", document.getElementById('setAside').checked);
+               slot.save(null, {
+                success: function (slot) {
+                    alert("Exam Scheduled! Seat Number: " + slot.get('SeatNum'));
+                    location.reload();
+                },
+                error: function (slot, error) {
+                    alert("An error occurred. Please try again.");
+                    console.log("error: " + error.message);
+                }
+            });
+
+           }
+       });
+}
+
+//    function oldReadyStudentSchedulability( ) {
+//        event.preventDefault();
+//        var examId = document.getElementById("examIdentifier").value;
+//        console.log("examid: " + examId);
+//        var date = document.getElementById("dp1").value;
+//        var startT = document.getElementById("dp2").value;
+//        var requestedTime = new Date(date + ' ' + startT);
+//        console.log("requested time: " + requestedTime);
+////            alert(examId);
+//
+//        var Exam = Parse.Object.extend("Exam");
+//        var query = new Parse.Query(Exam);
+//
+//        query.equalTo("ExamIdentifier", examId);
+//        query.first().then(function(object) {
+//            console.log("query entered");
+//            if (object != null) {
+//                if (object.get('CurrentStatus') == "approved") {
+//                    var start = new Date(object.get('StartDate') + ' ' + object.get('StartTime'));
+//                    var endTime = new Date(object.get('EndDate') + ' ' + object.get('EndTime'));
+//
+//                    if (requestedTime.getTime() >= start.getTime() && requestedTime.getTime() <= endTime.getTime()) {
+//
+//                        var duration = parseInt(object.get("Duration")) * 60000;
+//
+//                        var end = new Date((requestedTime.getTime() + duration));
+//                        console.log(duration);
+//                        console.log("start time: " + requestedTime);
+//                        console.log("end Time: " + end);
+//                        var available = isAppointmentSchedualable(date, start, end, function (response) {
+////                            alert(response);
+//
+//                            if (parseInt(response) > 0 && parseInt(response) < 65) {
+//                                console.log("seat Exists!");
+//                                var TimeSlot = Parse.Object.extend("TimeSlot");
+//                                var slot = new TimeSlot();
+//
+//                                var studentid = Parse.User.current().getUsername();
+//
+//                                slot.set("ExamIdentifier", examId);
+//                                slot.set("StudNetID", studentid);
+//                                slot.set("Date", date);
+//                                slot.set("StartTime", addZero(requestedTime.getHours()) + ":" + addZero(requestedTime.getMinutes()));
+//                                slot.set("EndTime", addZero(end.getHours()) + ":" + addZero(end.getMinutes()));
+//                                slot.set("SeatNum", response + "");
+//                                slot.set("Superfluous", false);
+//                                slot.set("CheckedIn", false);
+//                                slot.set("SetAsideBool", false);
+//                                slot.save(null, {
+//                                    success: function (slot) {
+//                                        alert("Exam Scheduled! Seat Number: " + slot.get('SeatNum'));
+//                                    },
+//                                    error: function (slot, error) {
+//                                        alert("An error occurred. Please try again.");
+//                                        console.log("error: " + error.message);
+//                                    }
+//                                });
+//
+//                            }
+//                        });
+//
+//                    } else {
+////                        alert("Exam not in range!");
+//                        document.getElementById("errorRange").innerHTML =
+//                                "Exam should be between " + object.get('StartTime') + " on " + object.get('StartDate')
+//                                + " and " + object.get('EndTime') + " on " + object.get('EndDate') + ".";
+//                        console.log("Exam not in range.");
+//                    }
+//
+//                } else if(object.get('CurrentStatus') == "pending") {
+//                    document.getElementById("errorRange").innerHTML=
+//                            "Registering for exams is not yet open. Try again later.";
+//                    console.log("Exam is still awaiting approval.");
+//                } else {
+//                    document.getElementById("errorRange").innerHTML=
+//                            "Exam does not exist. Please confirm your exam ID and/or time.";
+//                    console.log("Exam is denied.");
+//                }
+//
+//            } else {
+////                    alert("Exam does not exist!");
+//                document.getElementById("errorRange").innerHTML=
+//                        "Exam does not exist. Please confirm your exam ID and/or time.";
+//            }
+//
+//
+//        });
+//
+//
+//    }
+
+
+    /**
+     * HELPER FUNCTION *Does not need to be implemented, it extracts the html values and passes them into function*
+     *
+     */
+    //        function checkStudentSchedulability(date, startTime, endTime) {
+    //
+    //            var available = isAppointmentSchedualable(date,startTime, endTime, function(response) {
+    //                alert(response);
+    //            });
+    //        }
+
+    /**
+     * Checks if appointment slot chosen by student is available, returns boolean
+     * @param date from date picker as seen in above html
+     * @param startTime from time picker as in above html
+     * @param endTime from time picker as in above html
+     * @callback Callback must be implemented because function is asynchronous
+     * example of how to call with call back is seen in "checkStudentSchedulability()"
+     */
+     function isAppointmentSchedualable(date, startTime, endTime, callback) {
+
+        event.preventDefault();
+
+            // var startTime = new Date(date + " " + startTime);
+            // var endTime = new Date(date + " " + endTime);
+
+            var Exam = Parse.Object.extend("TimeSlot");
+            var query = new Parse.Query(Exam);
+
+            var countAvailable = 64;
+
+            query.find().then(function(exams) {
+
+                var seatsUnavail = [];
+                for (var i = 0; i < 64; i++) {
+                    seatsUnavail.push(0);
+                }
+                for (var i = 0; i < exams.length; i++) {
+                    var object = exams[i];
+                    var start = new Date(object.get("Date") + " " + object.get("StartTime"));
+                    var end = new Date(object.get("Date") + " " + object.get("EndTime"));
+
+
+                    if (start.getTime() >= startTime.getTime() && start.getTime()<= endTime.getTime() ){
+                        countAvailable -= 1;
+                        seatsUnavail[object.get('SeatNum')-1] = 1;
+                        console.log("Unavilable:" + object.get('SeatNum'));
+
+                    } else if (end.getTime() >= startTime.getTime() && end.getTime()<= endTime.getTime() ) {
+                        countAvailable -= 1;
+                        seatsUnavail[object.get('SeatNum')-1] = 1;
+                        console.log("Unavilable:" + object.get('SeatNum'));
+
+                    } else if (start.getTime() <= startTime.getTime() && end.getTime() >= endTime.getTime() ) {
+                        countAvailable -= 1;
+                        seatsUnavail[object.get('SeatNum')-1] = 1;
+                        console.log("Unavilable:" + object.get('SeatNum'));
+
+                    }
+
+
+
+                }
+
+
+                console.log("seats available at given time: " + countAvailable);
+
+                var seatNumberToAssign = -1;
+                for ( var i = 0; i < seatsUnavail.length; i++) {
+                    if (seatsUnavail[i] != 1) {
+                        seatNumberToAssign = i+1;
+                        break;
+                    }
+                }
+                if (countAvailable > 0 && seatNumberToAssign != -1) {
+
+                    callback(seatNumberToAssign);
+                } else {
+                    callback(-1);
+                }
+
+
+            });
+
+}
+
+            //Exam Schedualability
+    /**
+     * HELPER FUNCTION *Does not need to be implemented, it extracts the html values and passes them into function*
+     */
+     function checkExamSchedulability () {
+
+        var startDate = document.getElementById("startDate").value;
+        var startTime = document.getElementById("startTime").value;
+        var endDate = document.getElementById("endDate").value;
+        var endTime = document.getElementById("endTime").value;
+        var duration = document.getElementById("duration").value;
+        var numStudents = document.getElementById("numStudents").value;
+
+        var available = isExamSchedualable(startDate,startTime,endDate,endTime, duration, numStudents, function(response) {
+            alert(response);
+        });
+    }
+
+
+    /**
+     * Checks if exam range is available for all students in the requested exam times
+     * @param startDate from date picker as seen in above html
+     * @param startTime from time picker as in above html
+     * @param endDate from date picker as seen in above html
+     * @param endTime from time picker as in above html
+     * @param duration provided by user as text input
+     * @papam numStudents provided by user as text input
+     * @callback Callback must be implemented because function is asynchronous
+     * example of how to call with call back is seen in "checkExamSchedulability()"
+     */
+     function isExamSchedualable(startDate, startTime, endDate, endTime, duration, numStudents, callback) {
+        event.preventDefault();
+        var minutes = calculateAvailableTime(startDate, startTime, endDate, endTime)*64;
+
+//        alert("minutes in range: " + minutes);
+var minutesRequired = duration * numStudents;
+
+//        alert("minutes required: " + minutesRequired);
+
+var start = startDate + " " + startTime;
+var end = endDate + " " + endTime;
+var date1 = new Date(start);
+var date2 = new Date(end);
+
+var timeFilled = 0;
+
+var Exam = Parse.Object.extend("TimeSlot");
+
+var query = new Parse.Query(Exam);
+
+query.find().then(function(exams) {
+
+
+    for(var i = 0; i < exams.length; i++) {
+        var object = exams[i];
+
+        var sT = object.get('StartTime');
+        var eT = object.get('EndTime');
+        var date = new Date(object.get('Date') + " " + sT);
+        if (date.getTime() >= date1.getTime()  && date.getTime() < date2.getTime()) {
+            var dur = (getDuration(sT,eT)/60);
+            timeFilled += dur;
+
+        } else {
+        }
+
+    }
+
+    var availableMinutes = minutes - timeFilled;
+//            alert("timeFilled: " + timeFilled);
+if (availableMinutes >= minutesRequired) {
+    callback(true);
+} else {
+    callback(false);
+}
+
+});
+
+
+
+}
+
+
+
+    /**
+     * calculates the amount of time that should be between the given range based on input and testing center hours
+     * @param startDate
+     * @param startTime
+     * @param endDate
+     * @param endTime
+     * @return time in minutes
+     */
+     function calculateAvailableTime(startDate, startTime, endDate, endTime) {
+        var start = startDate + " " + startTime;
+        var end = endDate + " " + endTime;
+        var date1 = new Date(start);
+        var date2 = new Date(end);
+        var minutes = 0;
+
+
+
+
+        var curdate = new Date(startDate + " 00:00");
+
+        while (curdate.getTime() <= date2.getTime()) {
+
+
+            if (curdate.getDay() != 0 && curdate.getDay() != 6) {
+
+                if((curdate.getDate()==date1.getDate()) && curdate.getDate()==date2.getDate()){
+                    minutes += (date2.getTime() - date1.getTime())/60000;
+
+                } else if (curdate.getDate() == date1.getDate()){
+                    var close = new Date(startDate + " 22:00");
+                    minutes += (close.getTime() - date1.getTime())/60000;
+
+                } else if (curdate.getDate() == date2.getDate()) {
+                    var open = new Date(endDate + " 08:00");
+                    minutes += (date2.getTime() - open.getTime()) / 60000;
+
+                } else {
+                    minutes += (14 * 60);
+                }
+
+
+            }
+
+            curdate.setDate(curdate.getDate() + 1);
+
+
+        }
+
+        return minutes;
+    }
+    function trunc (i)
+    {
+        var j = Math.round(i * 100);
+        return Math.floor(j / 100) + (j % 100 > 0 ? "." + p(j % 100) : "");
+    }
+
+    function studentCheckIn(form){
+            var studentNetID = form.checkInID.value;
+            var examIdentifier = form.checkInExam.value;
+
+            var TimeSlot = Parse.Object.extend("TimeSlot");
+            var timeslot = new TimeSlot();
+            var examQuery = new Parse.Query(timeslot);
+            examQuery.equalTo("ExamIdentifier", examIdentifier);
+
+            examQuery.find({
+                success: function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var row = results[i];
+                        if(row.get('StudNetID') == studentNetID){
+                            row.set('CheckedIn', true);
+                            row.save(null, {
+                                success: function(gameScore) {
+                                alert(studentNetID + " is checked in for " + examIdentifier + " at seat " + row.get('SeatNum'));
+                            },
+                                error: function(gameScore, error) {
+                                    console.log(error.message);
+                            }
+                });
+                        }
+
+                    }
+                },
+                error: function(exam, error){
+                    alert("Error: " + error.code + " " + error.message);
+                }
+            });
+    }
+
+     function loadApts(){
+            clearTableApt();
+
+            var currentDate = getTodaysDate();
+            var TimeSlot = Parse.Object.extend("TimeSlot");
+            var timeslot = new TimeSlot();
+            var dateQuery = new Parse.Query(timeslot);
+            dateQuery.equalTo("Date", currentDate);
+
+            dateQuery.find({
+                success: function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var object = results[i];
+                        
+                        var object = results[i];
+
+                        tablebody = document.getElementById("aptTable");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        cell8 = document.createElement("td");
+                        cell9 = document.createElement("td");
+                        textnode1 = document.createTextNode(object.get('Date'));
+                        textnode2 = document.createTextNode(object.get('ExamIdentifier'));
+                        textnode3 = document.createTextNode(object.get('StudNetID'));
+                        textnode4 = document.createTextNode(object.get('StartTime'));
+                        textnode5 = document.createTextNode(object.get('EndTime'));
+                        textnode6 = document.createTextNode(object.get('SeatNum'));
+                        textnode7 = document.createTextNode(object.get('CheckedIn'));
+                        textnode8 = document.createTextNode(object.get('Superfluous'));
+                        textnode9 = document.createTextNode(object.id);
+                        cell1.appendChild(textnode1);
+                        cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        cell8.appendChild(textnode8);
+                        cell9.appendChild(textnode9);
+                        row.appendChild(cell1);
+                        row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+                        row.appendChild(cell8);
+                        row.appendChild(cell9);
+
+                        tablebody.appendChild(row);
+                    }
+
+                },
+                error: function(exam, error){
+                    alert("Error: " + error.code + " " + error.message);
+                }
+
+
+            });
+
+    }
+
+    function loadAptsByDate(){
+            clearTableApt();
+
+            var specifiedDate = document.getElementById("aptDateView").value;
+            
+            specifiedDate = convertDate(specifiedDate);
+
+            var TimeSlot = Parse.Object.extend("TimeSlot");
+            var timeslot = new TimeSlot();
+            var dateQuery = new Parse.Query(timeslot);
+            dateQuery.equalTo("Date", specifiedDate);
+
+            dateQuery.find({
+                success: function(results){
+                    for (var i = 0; i < results.length; i++) {
+                        var object = results[i];
+                        
+                        var object = results[i];
+
+                        tablebody = document.getElementById("aptTable");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        cell8 = document.createElement("td");
+                        cell9 = document.createElement("td");
+                        textnode1 = document.createTextNode(object.get('Date'));
+                        textnode2 = document.createTextNode(object.get('ExamIdentifier'));
+                        textnode3 = document.createTextNode(object.get('StudNetID'));
+                        textnode4 = document.createTextNode(object.get('StartTime'));
+                        textnode5 = document.createTextNode(object.get('EndTime'));
+                        textnode6 = document.createTextNode(object.get('SeatNum'));
+                        textnode7 = document.createTextNode(object.get('CheckedIn'));
+                        textnode8 = document.createTextNode(object.get('Superfluous'));
+                        textnode9 = document.createTextNode(object.id);
+                        cell1.appendChild(textnode1);
+                        cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        cell8.appendChild(textnode8);
+                        cell9.appendChild(textnode9);
+                        row.appendChild(cell1);
+                        row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+                        row.appendChild(cell8);
+                        row.appendChild(cell9);
+
+                        tablebody.appendChild(row);
+                    }
+
+                },
+                error: function(exam, error){
+                    alert("Error: " + error.code + " " + error.message);
+                }
+
+
+            });
+    }
+
+    function convertDate(date){
+            var dateArr = date.split("-");
+            var newDate = dateArr[1] + '/' + dateArr[2] + '/' + dateArr[0];
+
+            return newDate;
+    }
+
+
+
+    function getTodaysDate(){
+       var today = new Date();
+       var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+
+        var yyyy = today.getFullYear();
+        if(dd<10){
+            dd='0'+dd
+        } 
+        if(mm<10){
+          mm='0'+mm
+      } 
+      var today = mm+'/'+dd+'/'+yyyy;
+      return today;
+    }
+
+    function cancelAppointment(){
+          var courseID = document.getElementById('aptCancel').value;
+          var TimeSlot = Parse.Object.extend("TimeSlot");
+          var timeslot = new TimeSlot();
+          var idQuery = new Parse.Query(timeslot);
+        //  idQuery.equalTo("objectID", courseID);
+
+
+          idQuery.find({
+                        success: function(result){
+                               console.log(result.length);
+                               for(var i = 0; i < result.length; i++){
+                                    if(result[i].id == courseID){
+                                        result[i].destroy({
+                                            success:function(){
+                                                loadApts();
+                                                console.log("Appointment Deleted");
+                                            }
+                                })
+                                    }
+                               }
+                              /* result.destroy({
+                                    success:function(){
+                                        console.log("Appointment Deleted");
+                                    }
+                                }) */
+                        }
+                    });
+        }
+
+    String.prototype.isEmpty = function() {
+            return (this.length === 0 || !this.trim());
+        };
+
+
+    function editAppointment(){
+        var TimeSlot = Parse.Object.extend("TimeSlot");
+        var timeslot = new TimeSlot();
+        var idQuery = new Parse.Query(timeslot);
+
+        var appointmentID = document.getElementById('aptEditVal').value;
+
+        var newDate = document.getElementById('dateEditID').value;
+        var newStartTime = document.getElementById('startTimeEditID').value;
+        var newEndTime = document.getElementById('endTimeEditID').value;
+        var newSeatNumber = document.getElementById('seatNumberEditID').value;
+        var checkedInBoolTrue = document.getElementById('checkedInEditTrue').checked;
+        var checkedInBoolFalse = document.getElementById('checkedInEditFalse').checked;
+
+
+        idQuery.find({
+                        success: function(result){
+                               console.log(result.length);
+                               for(var i = 0; i < result.length; i++){
+                                    if(result[i].id == appointmentID){
+                                        var row = result[i];
+                                        if(!newDate.isEmpty()){
+                                            row.set('Date', convertDate(newDate));
+                                        }
+                                        if(!newStartTime.isEmpty()){
+                                            row.set('StartTime', newStartTime);
+                                        }
+                                        if(!newEndTime.isEmpty()){
+                                            row.set('EndTime', newEndTime);
+                                        }
+                                        if(!newSeatNumber.isEmpty()){
+                                            row.set('SeatNum', newSeatNumber);
+                                        }
+                                        if(checkedInBoolTrue){
+                                            row.set('CheckedIn', checkedInBoolTrue);
+                                        }
+                                        if(checkedInBoolFalse){
+                                            row.set('CheckedIn', checkedInBoolFalse);
+                                        }
+
+
+                                        row.save(null, {
+                                            success: function(gameScore) {
+                                                alert('Changes have been saved');
+                                                loadApts();
+                                            },
+                                        error: function(gameScore, error) {
+                                                console.log(error.message);
+                                            }
+                                        });
+                                    }
+                               }
+                        }
+                    });
+    }
+
+
+
+  function generateReportsA(){
+
+        var TimeSlot = Parse.Object.extend("TimeSlot");
+        var query = new Parse.Query(TimeSlot);
+        var term = document.getElementById("Term").value;
+        var studentsToDisplay = [];
+        query.find({
+            success: function(results){
+                for(var i =0; i<results.length; i++){
+                    var examIdentifier = results[i].get("ExamIdentifier");
+                    var examIdTerm= examIdentifier.substring(10,14);
+                    console.log("EXAM TERM: " + examIdTerm);
+                    if(examIdTerm == term){
+                        studentsToDisplay.push(results[i]);
+                    }
+
+                }
+                for(var j =0; j<studentsToDisplay.length; j++){
+                tablebody = document.getElementById("reportA");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        textnode1 = document.createTextNode(studentsToDisplay[j].get('CheckedIn'));
+                        textnode2 = document.createTextNode(studentsToDisplay[j].get('Date'));
+                        textnode3 = document.createTextNode(studentsToDisplay[j].get('EndTime'));
+                        textnode4 = document.createTextNode(studentsToDisplay[j].get('ExamIdentifier'));
+                        textnode5 = document.createTextNode(studentsToDisplay[j].get('SeatNum'));
+                        textnode6 = document.createTextNode(studentsToDisplay[j].get('SetAsideBool'));
+                        textnode7 = document.createTextNode(studentsToDisplay[j].get('StartTime'));
+                        cell1.appendChild(textnode1);
+                        cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        row.appendChild(cell1);
+                        row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+
+                        tablebody.appendChild(row);
+                            }
+                console.log("STUDENTS TO DISPLAY: " + studentsToDisplay);
+            },
+            error: function(error){
+                alert("Error: " + error.message);
+
+            }
+
+        });
+
+
+
+  }
+
+ function generateReportsB(){
+
+            var TimeSlot = Parse.Object.extend("TimeSlot");
+        var query = new Parse.Query(TimeSlot);
+        var term = document.getElementById("TermB").value;
+        var studentsToDisplay = [];
+        var group = 1;
+        query.find({
+            success: function(results){
+                for(var i =0; i<results.length; i++){
+                    var examIdentifier = results[i].get("ExamIdentifier");
+                    var examIdTerm= examIdentifier.substring(10,14);
+                    console.log("EXAM TERM: " + examIdTerm);
+                    if(examIdTerm == term){
+                        studentsToDisplay.push(results[i]);
+                    }
+
+                }
+                for(var j =0; j<studentsToDisplay.length; j++){
+                tablebody = document.getElementById("reportB");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        cell8 = document.createElement("td");
+                        textnode1 = document.createTextNode(studentsToDisplay[j].get('CheckedIn'));
+                        textnode2 = document.createTextNode(studentsToDisplay[j].get('Date'));
+                        textnode3 = document.createTextNode(studentsToDisplay[j].get('EndTime'));
+                        textnode4 = document.createTextNode(studentsToDisplay[j].get('ExamIdentifier'));
+                        textnode5 = document.createTextNode(studentsToDisplay[j].get('SeatNum'));
+                        textnode6 = document.createTextNode(studentsToDisplay[j].get('SetAsideBool'));
+                        textnode7 = document.createTextNode(studentsToDisplay[j].get('StartTime'));
+                        textnode8 = document.createTextNode("Week: " + j%group);
+                        cell1.appendChild(textnode1);
+                        cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        cell8.appendChild(textnode8);
+                        row.appendChild(cell1);
+                        row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+                        row.appendChild(cell8);
+
+                        tablebody.appendChild(row);
+                            }
+                console.log("STUDENTS TO DISPLAY: " + studentsToDisplay);
+            },
+            error: function(error){
+                alert("Error: " + error.message);
+
+            }
+
+        });
+
+
+
+
+ }
+
+
+  function generateReportsC(){
+var Exam = Parse.Object.extend("Exam");
+        var query = new Parse.Query(Exam);
+        var term = document.getElementById("TermC").value;
+        var coursesToDisplay = [];
+
+        query.find({
+            success: function(results){
+                for(var i =0; i<results.length; i++){
+                    var examIdentifier = results[i].get("ExamIdentifier");
+                    var examIdTerm= examIdentifier.substring(10,14);
+                    console.log("EXAM TERM: " + examIdTerm);
+                    if(examIdTerm == term){
+                        coursesToDisplay.push(results[i]);
+                    }
+
+                }
+            for(var j =0; j<coursesToDisplay.length; j++){
+                tablebody = document.getElementById("reportC");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        cell8 = document.createElement("td");
+                        cell9 = document.createElement("td");
+                        cell10 = document.createElement("td");
+                       
+                        textnode1 = document.createTextNode(coursesToDisplay[j].get('Adhoc'));
+                       
+                        textnode2 = document.createTextNode(coursesToDisplay[j].get('ClassID'));
+                        textnode3 = document.createTextNode(coursesToDisplay[j].get('ExamIdentifier'));
+                        textnode4 = document.createTextNode(coursesToDisplay[j].get('CourseIdentifier'));
+                        textnode5 = document.createTextNode(coursesToDisplay[j].get('CurrentStatus'));
+                        textnode6 = document.createTextNode(coursesToDisplay[j].get('Duration'));
+                        textnode7 = document.createTextNode(coursesToDisplay[j].get('EndDate'));
+
+                          textnode8 = document.createTextNode(coursesToDisplay[j].get('EndTime'));
+                           textnode9 = document.createTextNode(coursesToDisplay[j].get('StartDate'));
+
+                          textnode10 = document.createTextNode(coursesToDisplay[j].get('StartTime'));
+                        cell1.appendChild(textnode1);
+                       cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        cell8.appendChild(textnode8);
+                        cell9.appendChild(textnode9);
+                        cell10.appendChild(textnode10);
+                       
+                  row.appendChild(cell1);
+                    row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+                        row.appendChild(cell8);
+                        row.appendChild(cell9);
+                        row.appendChild(cell10);
+                       
+
+                        tablebody.appendChild(row);
+                            }
+                console.log("Courses TO DISPLAY: " + coursesToDisplay);
+            },
+            error: function(error){
+                alert("Error: " + error.message);
+
+            }
+
+        });
+
+
+
+
+  }
+
+
+
+  function generateReportsD(){
+    var Exam = Parse.Object.extend("Exam");
+        var query = new Parse.Query(Exam);
+        var term = document.getElementById("TermD").value;
+        var coursesToDisplay = [];
+
+        query.find({
+            success: function(results){
+                for(var i =0; i<results.length; i++){
+                    var examIdentifier = results[i].get("ExamIdentifier");
+                    var examIdTerm= examIdentifier.substring(10,14);
+                    console.log("EXAM TERM: " + examIdTerm);
+                   
+                        coursesToDisplay.push(results[i]);
+                    
+
+                }
+            for(var j =0; j<coursesToDisplay.length; j++){
+                tablebody = document.getElementById("reportD");
+                        row = document.createElement("tr");
+                        cell1 = document.createElement("td");
+                        cell2 = document.createElement("td");
+                        cell3 = document.createElement("td");
+                        cell4 = document.createElement("td");
+                        cell5 = document.createElement("td");
+                        cell6 = document.createElement("td");
+                        cell7 = document.createElement("td");
+                        cell8 = document.createElement("td");
+                        cell9 = document.createElement("td");
+                        cell10 = document.createElement("td");
+                       
+                        textnode1 = document.createTextNode(coursesToDisplay[j].get('Adhoc'));
+                       
+                        textnode2 = document.createTextNode(coursesToDisplay[j].get('ClassID'));
+                        textnode3 = document.createTextNode(coursesToDisplay[j].get('ExamIdentifier'));
+                        textnode4 = document.createTextNode(coursesToDisplay[j].get('CourseIdentifier'));
+                        textnode5 = document.createTextNode(coursesToDisplay[j].get('CurrentStatus'));
+                        textnode6 = document.createTextNode(coursesToDisplay[j].get('Duration'));
+                        textnode7 = document.createTextNode(coursesToDisplay[j].get('EndDate'));
+
+                          textnode8 = document.createTextNode(coursesToDisplay[j].get('EndTime'));
+                           textnode9 = document.createTextNode(coursesToDisplay[j].get('StartDate'));
+
+                          textnode10 = document.createTextNode(coursesToDisplay[j].get('StartTime'));
+                        cell1.appendChild(textnode1);
+                       cell2.appendChild(textnode2);
+                        cell3.appendChild(textnode3);
+                        cell4.appendChild(textnode4);
+                        cell5.appendChild(textnode5);
+                        cell6.appendChild(textnode6);
+                        cell7.appendChild(textnode7);
+                        cell8.appendChild(textnode8);
+                        cell9.appendChild(textnode9);
+                        cell10.appendChild(textnode10);
+                       
+                  row.appendChild(cell1);
+                    row.appendChild(cell2);
+                        row.appendChild(cell3);
+                        row.appendChild(cell4);
+                        row.appendChild(cell5);
+                        row.appendChild(cell6);
+                        row.appendChild(cell7);
+                        row.appendChild(cell8);
+                        row.appendChild(cell9);
+                        row.appendChild(cell10);
+                       
+
+                        tablebody.appendChild(row);
+                            }
+                console.log("Courses TO DISPLAY: " + coursesToDisplay);
+            },
+            error: function(error){
+                alert("Error: " + error.message);
+
+            }
+
+        });
+
+
+  }
+
+
+
+    </script>
+
+
+
+</head>
+
+<body onLoad = "onLoad()">
+    <div align=”center”><img src="images/banner.png" alt="banner_stonybrook" width="100%" height="100px" border="0" align="middle"></div>
+
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" style="color:#FFFFFF" href="#">Administrator</a>
+            </div>
+            <div>
+                <ul class="nav navbar-nav">
+                    <li><a href="#EditCenterInfo" style="color:#FFFFFF">Edit Center Info</a></li>
+                    <li><a href="#StudentCheckIn" style="color:#FFFFFF">Student Check In</a></li>
+                    <li><a href="#ImportData" style="color:#FFFFFF">Import Data</a></li>
+                    <li><a href="#" style="color:#FFFFFF">Show Todays Usage & Appointments</a></li>
+                    <li><a href="#ApproveRequest" style="color:#FFFFFF">Approve/Deny Request</a></li>
+                    <li><a href="#Generate" style="color:#FFFFFF">Generate Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!--< id="adminDiv">-->
+
+    <!-- Section #1 -->
+    <div style="margin-bottom:45px width:100%;">
+        <div align="left" style="margin-bottom:100px width:100%;">
+
+            <h3>Edit Information</h3>
+            <FORM NAME="myform" ACTION="" METHOD="POST"><BR>
+                <input type="number" name="numSeats" value=""> Edit Number of Seats<P>
+                <input type="number" name="setAsideSeats" value=""> Edit Number of Set-Aside Seats<P>
+                Opening Time <input type="time" name="hoursFutureTermOpen" value="">
+                Closing Time <input type="time" name="hoursFutureTermClose" value=""><P>
+
+                <input type="number" name="gapTime" value=""> Gap Time <P> <!-- may range from 0 to 30 -->
+                <input type="number" name="reminderInterval" value=""> Set Reminder Interval <P>
+                <input type="text" name="term" value="">Term<P>
+
+                <button type="button" style="color: #FFFFFF" class="btn btn-primary" onclick="setTestingCenterInformation(this.form)">Update Center Information</button>
+
+                <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+                <h3>Specify Closed Date and Time Ranges</h3>
+
+                <!--COPY THIS HTML-->
+                <br>
+                <div class="col-md-9" id="multipleClosedInputTable">
+                    <p style="display: inline;" >Closed Time Blocks: </p><p style="display: inline;" id="closedTimesCount">0</p>
+                    <input class="btn btn-default" type="button" style="display: inline; float:right;" value="Add Entry" onclick="addClosingDateEntry()">
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Term</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closedDateInputs">
+
+                        </tbody>
+                    </table>
+                    <input class="btn btn-default" type="button" style="display: inline; float:right;" value="Save" onclick="saveClosedDates()">
+                </div>
+
+                <br><br><br><br><br><br>
+
+                <div class="col-md-9" id="multipleTimeInputTable">
+                    <p style="display: inline;" >Closed Range Blocks: </p><p style="display: inline;" id="closedRangeCount">0</p>
+                    <input class="btn btn-default" type="button" style="display: inline; float:right;" value="Add Entry" onclick="addClosingRangeEntry()">
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Start Date</th>
+                                <th>Start Time</th>
+                                <th>End Date</th>
+                                <th>End Time</th>
+                                <th>Term</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closedTimeInputs">
+
+                        </tbody>
+                    </table>
+                    <input class="btn btn-default" type="button" style="display: inline; float:right;" value="Save" onclick="saveClosedTimes()">
+                </div>
+
+                <br><br> <br><br><br><br><br><br> <br><br>
+
+
+            </FORM>
+        </div>
+
+        <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+
+        <!--<div style="margin-bottom:45px width:100%;">-->
+        <!--<div align="left" style="margin-bottom:100px width:100%;">-->
+        <!--<h3>Display Utilization of Specified Date Range</h3><p>-->
+        <!--<FORM NAME="myform5" ACTION="" METHOD="POST"><BR>-->
+        <!--<FORM NAME="myform" ACTION="" METHOD="POST">Schedule Exam<BR>-->
+        <!--From <input type="date" name="utilization1"> To   <input type="date"  name="utilization2" ><p>-->
+        <!--<br><br><br>-->
+        <!--<button type="button" class="btn btn-primary" onclick="displayUtilization(this.form)">View Utilization</button>-->
+        <!--</FORM>-->
+        <!--</FORM>-->
+        <!--</div>-->
+        <!--</div>-->
+
+        <!--Range Datepicker-->
+        <div class="container-fluid">
+            <form >
+                <div class="container">
+                    <h3>Display Utilization of Specified Date Range</h3>
+                    <br>
+                    <div class='col-md-5'>
+                        <div class="form-group">
+                            <div class='input-group date'  id='datetimepicker1'>
+                                <input type='text' id="utilizationDate1" name="utilization1" class="form-control" />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='col-md-5'>
+                        <div class="form-group">
+                            <div class='input-group date'  id='datetimepicker2'>
+                                <input type='text' id="utilizationDate2" name="utilization2" class="form-control" />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+            <button onclick="displayUtilization()"  class="btn btn-default pull-right">Get Utilization</button>
+
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Utilization</th>
+                        <!--<th>Expected?</th>-->
+                    </tr>
+                </thead>
+                <tbody id="utilizationRangeTableBody">
+
+                </tbody>
+            </table>
+        </div>
+        <!--Range Datepicker-->
+
+        <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+        <div align="left"  style="margin-top:100px width:100%;">
+            <h3> View Center Information</h3>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Number Of Seats</th>
+                        <th>Set Aside Seats</th>
+                        <th>Opening Time</th>
+                        <th>Closing Time</th>
+                        <th>Gap Time</th>
+                        <th>Reminder Interval</th>
+                        <th>Term</th>
+                    </tr>
+                </thead>
+                <tbody id="tcinfo">
+
+                </tbody>
+
+            </table>
+
+
+        </div>
+
+
+    </div>
+
+        <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+    <div align="left">
+        <h3>Import Data</h3>
+        <form id="file-form" action="handler.php" method="POST">
+            <input type="file" id="file-select" name="photos[]" multiple/>
+            <button type="button"  class="btn btn-primary" onclick="uploadCSV(this.form, 1)" >Upload Class CSV</button>
+        </form>
+
+
+
+        <form id="file-form2" action="handler.php" method="POST">
+            <input type="file" id="file-select2" name="photos[]" multiple/>
+            <button type="button" class="btn btn-primary" onclick="uploadCSV(this.form, 2)" >Upload Roster CSV</button>
+        </form>
+
+
+
+        <form id="file-form3" action="handler.php" method="POST">
+            <input type="file" id="file-select3" name="photos[]" multiple/>
+            <button type="button" class="btn btn-primary" onclick="uploadCSV(this.form, 3)" >Upload User CSV</button>
+        </form>
+
+        <form id="file-form4" action="handler.php" method="POST">
+            <input type="file" id="file-select4" name="photos[]" multiple/>
+            <button type="button" class="btn btn-primary" onclick="uploadCSV(this.form, 4)" >Upload Instructor CSV</button>
+        </form>
+    </div>
+
+    <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+
+    <h3>Current Exam Request</h3>
+    <div class="container" align="left">
+        <!--<INPUT TYPE="button" NAME="button" Value="Submit" onClick="testResults2(this.form)">-->
+
+
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>CourseID </th>
+                    <th>Start Date </th>
+                    <th>Start Time </th>
+                    <th>End Date </th>
+                    <th>End Time </th>
+                    <th>Current Status</th>
+                </tr>
+            </thead>
+            <tbody id="examAptTable">
+
+            </tbody>
+
+        </table>
+    </div>
+
+    <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+    <h3>Approve/Deny Exam Requests</h3>
+    <FORM NAME="myform2" ACTION="" METHOD="POST"><BR>
+        <INPUT TYPE="boolean" NAME="examAcceptDeny" VALUE=""><p>Insert Exam Name</p>
+            <label class="radio-inline"><input type="radio" name="optradio" id="delete">Deny Request</label>
+            <label class="radio-inline"><input type="radio" name="optradio" id="approve">Approve Request</label>
+            <button type="button" class="btn btn-primary" onclick="acceptDenyExam(myform2)">Submit</button>
+        </FORM>
+
+
+        <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+
+        <div>
+            <h3>Schedule Appointment For A Student</h3>
+
+            <input type="text" name="studentNetID" value="" id="studentNetIDVal">Student Net ID<p></p>
+            <label class="radio-inline"><input type="radio" name="optradio" id="reg">Regular </label>
+            <label class="radio-inline"><input type="radio" name="optradio" id="setAside">Set Aside</label><p></p>
+            
+            <button type="button" class="btn btn-primary" onclick="setupView()">Find Available Exams</button>
+            <div>
+
+                <div>
+
+                    <div class="form-group">
+
+
+                        <button style="display:inline" class="btn btn-primary pull-right" id="resetbtn" onclick="reset()">Start Over</button>
+                        <br>
+
+                        <h4>Exams Available: </h4>
+                        <select class="form-control" id="examList">
+
+                        </select>
+                        <br>
+                        <button class="btn btn-primary" onclick="promptRanges()">Choose Date</button>
+                    </div>
+
+                    <div class='col-md-5' id="dateInput">
+                        <div class="form-group">
+                            <h4>Date: </h4>
+                            <div class='input-group date' id='datetimepicker0'>
+                                <input type='text' class="form-control" id="dp0"/>
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                            <button class="btn btn-primary" onclick="displayTimeSlots()">Check Time Slots</button>
+                            <p id="errorRange" style="color:red;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ssparent">
+                    <h4>Select Slot: </h4>
+                    <select class="form-control" id="slotSelector">
+
+                    </select>
+                    <button class="btn btn-primary" onclick="newReadyStudentSchedulability()">Make Request</button>
+                </div>
+
+
+                <div>
+                    <h3></h3>
+
+                </div>
+
+
+
+        <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+            </div>
+
+            <div>
+                <h3>Student Check-In</h3>
+
+                <FORM NAME="myform" ACTION="" METHOD="POST">
+                <input type="text" name="checkInID" value=""> Student NetID<p></p>
+                <input type="text" name="checkInExam" value=""> Exam Identifier<p></p>
+
+                <button type="button"class="btn btn-primary" onclick="studentCheckIn(this.form)">Check In Student</button>
+
+
+
+            </div>
+
+
+         <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+
+            <h3>View Appointments</h3>
+
+            <div>
+                <FORM NAME="aptForm" ACTION="" METHOD="POST"><BR>
+                    <input type="date" name="viewAptDate" id="aptDateView" value=""> View Appointments On Specified Date<p></p>
+                    <button type="button"class="btn btn-primary" onclick="loadAptsByDate()">View Appointments</button>
+                </FORM>
+
+
+                <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Exam Identifier</th>
+                        <th>Student Net ID</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Seat Number</th>
+                        <th>Checked In</th>
+                        <th>Superfluous</th>
+                        <th>Appointment ID</th>
+                    </tr>
+                </thead>
+                <tbody id="aptTable">
+
+                </tbody>
+            </table>
+
+            </div>
+
+            <hr style="height:1px;border:none;color:#333;background-color:#333;">
+            
+
+            <div>
+            <h3>Cancel Appointment</h3>
+
+            <FORM NAME="cancelForm" ACTION="" METHOD="POST"><BR>
+                    <input type="text" name="cancelApt" id="aptCancel" value=""> Enter Appointment ID <p></p>
+                    <button type="button"class="btn btn-primary" onclick="cancelAppointment()">Cancel Appointment</button>
+                </FORM>
+
+            </div>
+
+            <hr style="height:1px;border:none;color:#333;background-color:#333;">
+
+            <div>
+            <h3>Edit Appointment</h3>
+
+            <FORM NAME="editForm" ACTION="" METHOD="POST"><BR>
+                    <input type="text" name="aptEdit" id="aptEditVal" value=""> Enter Appointment ID <p></p>
+
+                    <br></br> 
+                    <h4>Enter values into fields you wish to change</h4>
+                    <input type="date" name="dateEdit" id="dateEditID" value=""> Date <p></p>
+                    <input type="time" name="startTimeEdit" id="startTimeEditID" value=""> Start Time <p></p>
+                    <input type="time" name="endTimeEdit" id="endTimeEditID" value=""> End Time <p></p>
+                    <input type="number" name="seatNumberEdit"  id="seatNumberEditID" value=""> Seat Number <p></p>
+                    <h4>Edit Checked-In Status</h4>
+                    <label class="radio-inline"><input type="radio" name="checkEdit" id="checkedInEditTrue">Checked In</label>
+                    <label class="radio-inline"><input type="radio" name="checkEdit" id="checkedInEditFalse">Not Checked In</label><p></p>
+
+
+                    <button type="button"class="btn btn-primary" onclick="editAppointment()">Submit Changes</button>
+            </FORM>
+
+
+
+
+            </div>
+
+
+            <div>
+                 <hr style="height:1px;border:none;color:#333;background-color:#333;">
+                  <input type="number" name="Term"  id="Term" value="">Enter Term<p></p>
+                  <button type="button"class="btn btn-primary" onclick="generateReportsA()">Generate Report Type A</button>
+
+                   <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>CheckedIn</th>
+                        <th>Date</th>
+                        <th>End Time</th>
+                        <th>Exam Identifier</th>
+                        <th>Seat Number</th>
+                        <th>Set Aside</th>
+                        <th>StartTime</th>
+                    
+                    </tr>
+                    
+                </thead>
+                <tbody id="reportA">
+
+                </tbody>
+            </table>
+
+
+
+            </div>
+
+            <div>
+                 <hr style="height:1px;border:none;color:#333;background-color:#333;">
+                  <input type="number" name="TermB"  id="TermB" value="">Enter Term<p></p>
+                  <button type="button"class="btn btn-primary" onclick="generateReportsB()">Generate Report Type B</button>
+
+                   <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>CheckedIn</th>
+                        <th>Date</th>
+                        <th>End Time</th>
+                        <th>Exam Identifier</th>
+                        <th>Seat Number</th>
+                        <th>Set Aside</th>
+                        <th>StartTime</th>
+                    
+                    </tr>
+                    
+                </thead>
+                <tbody id="reportB">
+
+                </tbody>
+            </table>
+
+
+
+            </div>
+
+
+
+
+
+
+            <div>
+                 <hr style="height:1px;border:none;color:#333;background-color:#333;">
+                  <input type="number" name="TermC"  id="TermC" value="">Enter Term<p></p>
+                  <button type="button"class="btn btn-primary" onclick="generateReportsC()">Generate Report Type C</button>
+
+                   <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>AdHoc</th>
+                        <th>Exam Identifier</th>
+                        <th>Course Identifier</th>
+                        <th>Seat Number</th>
+                        <th>Current Status</th>
+                        <th>Duration</th>
+                         <th>End Date</th>
+                          <th>End Time</th>
+                           <th>Start Date</th>
+                           <th>Start Time</th>
+                    </tr>
+                    
+                    
+                </thead>
+                <tbody id="reportC">
+
+                </tbody>
+            </table>
+
+
+
+            </div>
+
+
+
+            <div>
+                 <hr style="height:1px;border:none;color:#333;background-color:#333;">
+                  <input type="number" name="TermD"  id="TermD" value="">Enter Term<p></p>
+                  <button type="button"class="btn btn-primary" onclick="generateReportsD()">Generate Report Type D</button>
+
+                   <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>AdHoc</th>
+                        <th>Exam Identifier</th>
+                        <th>Course Identifier</th>
+                        <th>Seat Number</th>
+                        <th>Current Status</th>
+                        <th>Duration</th>
+                         <th>End Date</th>
+                          <th>End Time</th>
+                           <th>Start Date</th>
+                           <th>Start Time</th>
+                    </tr>
+                    
+                    
+                </thead>
+                <tbody id="reportD">
+
+                </tbody>
+            </table>
+
+
+
+            </div>
+
+        
+        </body>
+        </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
